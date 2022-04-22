@@ -11,5 +11,5 @@ class Environment:
 
         for userClass in self.classes:
             dailyUser = np.random.normal(userClass.n_user[0], userClass.n_user[1])
-
+            userClass.setCurrentPrice(currentPrice)
         #To be completed
