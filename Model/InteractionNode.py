@@ -16,3 +16,19 @@ class InteractionNode:
         self.bought = bought
         self.units = units
         self.following = following
+
+    def printInteractions(self):
+        print('\nUSER INTERACTIONS: ')
+        self.printNode(0)
+
+
+    def printNode(self, nodeNumber):
+        print('#Interaction: ', nodeNumber)
+        print('#product: ', self.product)
+        boughtYN = 'No'
+        if self.bought == 1:
+            boughtYN = 'Yes'
+        print('bought: ', boughtYN)
+        print('#units: ', self.units, '\n')
+        if len(self.following) != 0:
+            self.following[0].printNode(nodeNumber + 1)
