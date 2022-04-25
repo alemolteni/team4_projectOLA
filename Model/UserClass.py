@@ -3,20 +3,21 @@ from Model.InteractionNode import InteractionNode
 
 
 class UserClass:
-    def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
+    #def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
+    def __init__(self, **arguments):
         self.id = id
-        self.conversionRate = conversionRate
-        self.clickProbability = clickProbability
-        self.alphas = alphas
-        self.n_bought = [n_bought_mean, n_bought_variance]
-        self.n_user = [n_user_mean, n_user_variance]
-        self.productList = productList
-        self.Lambda = Lambda
+        self.conversionRate = arguments['conversionRate']
+        self.clickProbability = arguments['clickProbability']
+        self.alphas = arguments['alphas']
+        self.n_bought = [arguments['n_bought_mean'], arguments['n_bought_variance']]
+        self.n_user = [arguments['n_user_mean'], arguments['n_user_variance']]
+        self.productList = arguments['productList']
+        self.Lambda = arguments['Lambda']
         self.currentPrice = []
 
     def generateEpisode(self):
         # For a user simulate the interaction with the website, returning clicks and currentProduct bought
-        rnd = np.random() # <------- TODO: MUST BE CHANGED TO A GAMMA DISTRIBUTION WITH Beta = 0.5
+        rnd = np.random()
 
         currentProduct = 0
         cumulative = 0
