@@ -22,13 +22,14 @@ class InteractionNode:
         self.printNode(0)
 
 
-    def printNode(self, nodeNumber):
-        print('#Interaction: ', nodeNumber)
-        print('#product: ', self.product)
+    def printNode(self, nodeLevel):
         boughtYN = 'No'
+        levelFormat = ""
+        for i in range(0,nodeLevel):
+            levelFormat = levelFormat + "    "
         if self.bought == 1:
             boughtYN = 'Yes'
-        print('bought: ', boughtYN)
-        print('#units: ', self.units, '\n')
-        if len(self.following) != 0:
-            self.following[0].printNode(nodeNumber + 1)
+        print("{}╚══ Product={}, PriceLevel={}, Bought={}, #Units={}".format(levelFormat,self.product,self.price,boughtYN,self.units))
+
+        for i in range(0,len(self.following)):
+            self.following[i].printNode(nodeLevel + 1)

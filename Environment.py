@@ -1,7 +1,6 @@
 import numpy as np
 from Model.UserClass import *
 
-
 class Environment:
     def __init__(self, Lambda, classes):
         self.Lambda = Lambda

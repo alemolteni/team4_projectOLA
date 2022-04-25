@@ -1,11 +1,13 @@
 import pprint
+import sys
 import unittest
+
+print(sys.path)
 
 from Model.GraphProbabilities import GraphProbabilities
 from Model.Product import Product
 from Model.UserClass import UserClass
 from Model.constants import PROBABILITY_MATRIX, SECONDARY_PRODUCTS
-
 
 class MyTestCase(unittest.TestCase):
     def test_UserEpisode(self):
@@ -48,4 +50,5 @@ class MyTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    
     unittest.main()
