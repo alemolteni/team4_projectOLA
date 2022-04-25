@@ -36,7 +36,7 @@ class UserClass:
 
     def generateProductInteraction(self, currentProduct, history):
 
-        # TODO: implement 'currentPrice'
+        # TODO: implement 'conversionRate'
         buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]
         bought = np.random.binomial(1, buyingProb)
 
