@@ -34,7 +34,8 @@ class MyTestCase(unittest.TestCase):
 
         userClass = UserClass(id=id, conversionRate=conversionRate, clickProbability=clickProbability, alphas=alphas,
                               Lambda=Lambda, n_bought_variance=n_bought_variance, n_bought_mean=n_bought_mean,
-                              n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList)
+                              n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
+                              features_generator=[{"name":"Over 18","probability":0.6},{"name":"Male","probability":0.9}])
 
         # pp = pprint.PrettyPrinter(indent=4)
         # pp.pprint(userClass.__dict__)

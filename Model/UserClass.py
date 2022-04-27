@@ -1,10 +1,11 @@
+from asyncio.windows_events import NULL
 import numpy as np
 from Model.InteractionNode import InteractionNode
 import math
 
 class UserClass:
     #def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
-    def __init__(self, units_gamma_shape=3, units_gamma_scale=1, debug=True, **arguments):
+    def __init__(self, units_gamma_shape=3, units_gamma_scale=1, debug=True, features_generator=[], **arguments):
         self.id = id
         self.conversionRate = arguments['conversionRate']
         self.clickProbability = arguments['clickProbability']
@@ -31,6 +32,13 @@ class UserClass:
         self.units_gamma_shape = units_gamma_shape
         self.units_gamma_scale = units_gamma_scale
         self.debug = debug
+        
+        self.features_prob = []
+        self.features_names = []
+        for i in range(0,len(features_generator)):
+            self.features_prob.append(features_generator[i]["probability"])
+            self.features_names.append(features_generator[i]["name"])
+        self.features_prob = np.array(self.features_prob)
 
     def generateEpisode(self):
         # For a user simulate the interaction with the website, returning clicks and currentProduct bought
@@ -46,11 +54,15 @@ class UserClass:
         history = np.full((len(self.alphas)), 1, dtype=int)
 
         userInteractions = self.generateProductInteraction(currentProduct, history)
+        userInteractions.setFeatures(self.features_names, self.generateFeature())
         return userInteractions
 
     def setCurrentPrice(self, currentPrice):
         self.currentPrice = currentPrice
 
+    def generateFeature(self):
+        gen_arr = np.random.rand(len(self.features_prob))
+        return gen_arr < self.features_prob
 
     def generateProductInteraction(self, currentProduct, history):
         # TODO: implement 'conversionRate'

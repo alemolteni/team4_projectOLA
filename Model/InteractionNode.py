@@ -16,9 +16,22 @@ class InteractionNode:
         self.bought = bought
         self.units = units
         self.following = following
+        self.featuresNames = []
+        self.featuresValues = []
+
+    def setFeatures(self, featuresNames, featuresValues):
+        self.featuresNames = featuresNames
+        self.featuresValues = featuresValues
+        assert len(featuresNames) == len(featuresValues)
 
     def printInteractions(self):
-        print('\nUSER INTERACTIONS: ')
+        featuresString = ""
+        for i in range(0,len(self.featuresNames)):
+            if i > 0:
+               featuresString = featuresString + ", "
+            featuresString = featuresString + self.featuresNames[i] + "=" + str(self.featuresValues[i])
+            
+        print('\nUSER INTERACTIONS: {}'.format(featuresString))
         self.printNode(0)
 
 
