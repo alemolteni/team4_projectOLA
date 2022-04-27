@@ -10,4 +10,4 @@ class GraphProbabilities:
     # in the FIRST OF THE SECONDARIES SLOT of product P (startNode)
     # NB: The '-1' accounts for the indices of the matrix starting from [0][0] and finishing in [4][4]
     def getEdgeProbability(self, startNode, endNode):
-        return self.weightMatrix[startNode-1][endNode-1]
+        return self.weightMatrix[startNode][endNode]
