@@ -80,7 +80,6 @@ class UserClass:
             Print additional information about the execution
         """
 
-        self.id = id
         self.conversionRate = conversionRate
 
         self.clickProbability = clickProbability
@@ -103,7 +102,7 @@ class UserClass:
         self.productList = productList
 
         self.Lambda = Lambda
-        assert self.Lambda >= 0 and self.Lambda <= 1
+        assert 0 <= self.Lambda <= 1
         self.currentPrice = []
         self.units_gamma_shape = units_gamma_shape
         self.units_gamma_scale = units_gamma_scale
@@ -124,7 +123,7 @@ class UserClass:
         # Get the index for which the value exceeds the generated random number
         # [.3, .4, .3] --> [.3, .7, 1]; If rnd=0.45 then currentProduct = 1
         currentProduct = np.argmax(self.product_alphas_intervals > rnd)    
-        assert currentProduct >= 0 and currentProduct < len(self.alphas)   
+        assert 0 <= currentProduct < len(self.alphas)
 
         # Initialize the history of products to be visited
         history = np.full((len(self.alphas)), 1, dtype=int)
@@ -171,33 +170,34 @@ class UserClass:
 
             # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
             # displayed
-            sec1 = self.productList[currentProduct].getSecondaryProduct(0)
-            if self.debug: print('sec1: ', sec1)
-            sec2 = self.productList[currentProduct].getSecondaryProduct(1)
-            if self.debug: print('sec2: ', sec2)
+            firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
+            if self.debug: print('sec1: ', firstSlot)
+            secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
+            if self.debug: print('sec2: ', secondSlot)
 
             # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
             # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
             # has to be multiplied by the factor 'Lambda'
-            clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, sec1) * history[sec1]
-            clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, sec2) * self.Lambda * history[sec2]
+            clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * history[firstSlot]
+            clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * history[secondSlot]
 
             # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
             # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
             sec1Bought = np.random.binomial(1, clickProbSec1)
             if self.debug: print('sec1Bought: ', sec1Bought)
             if sec1Bought == 1:
-                following.append(self.generateProductInteraction(sec1, history))
+                following.append(self.generateProductInteraction(firstSlot, history))
 
             sec2Bought = np.random.binomial(1, clickProbSec2)
             if self.debug: print('sec2Bought: ', sec2Bought)
             if sec2Bought == 1:
-                following.append(self.generateProductInteraction(sec2, history))
+                following.append(self.generateProductInteraction(secondSlot, history))
 
 
 
         # At the end of the interaction between the user and the current product an INTERACTION NODE is generated to
         # keep track of the user history
         interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
-                                          bought=bought, units=units, following=following)
+                                          firstSlot=firstSlot, secondSlot=secondSlot, sec1Bought=sec1Bought,
+                                          sec2Bought=sec2Bought, bought=bought, units=units, following=following)
         return interactionNode

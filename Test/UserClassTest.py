@@ -21,7 +21,7 @@ class MyTestCase(unittest.TestCase):
         ]
 
         clickProbability = GraphProbabilities(PROBABILITY_MATRIX)
-        alphas = [0.1, 0.1, 0.1, 0.3, 0.1, 0.3]
+        alphas = [0.2, 0.1, 0.3, 0.1, 0.3]
 
         n_bought_mean = 2
         n_bought_variance = 1
@@ -32,9 +32,8 @@ class MyTestCase(unittest.TestCase):
 
         Lambda = 0.8
 
-        userClass = UserClass(id=id, conversionRate=conversionRate, clickProbability=clickProbability, alphas=alphas,
-                              Lambda=Lambda, n_bought_variance=n_bought_variance, n_bought_mean=n_bought_mean,
-                              n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
+        userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, alphas=alphas,
+                              Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
                               features_generator=[{"name":"Over 18","probability":0.6},{"name":"Male","probability":0.9}])
 
         # pp = pprint.PrettyPrinter(indent=4)
