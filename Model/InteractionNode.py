@@ -46,7 +46,9 @@ class InteractionNode:
             featuresString = featuresString + self.featuresNames[i] + "=" + str(self.featuresValues[i])
             
         print('\n{}USER INTERACTIONS: {}'.format(CLIcolors.bcolors.HEADER, featuresString))
-        self.printNode(0)
+        leftFiller = self.printNode(0)
+        leftFiller = leftFiller + "    "
+        self.interactionEndCLI(leftFiller)
 
 
     def printNode(self, nodeLevel):
@@ -60,8 +62,9 @@ class InteractionNode:
         self.printBoxCLI(levelFormat, boughtYN)
 
         for i in range(0, len(self.following)):
-            self.following[i].printNode(nodeLevel + 1)
+            levelFormat = self.following[i].printNode(nodeLevel + 1)
 
+        return levelFormat
 
 
     def printBoxCLI(self, levelFormat, boughtYN):
@@ -82,3 +85,10 @@ class InteractionNode:
                                                                                                           fillChar),
               '{}┃'.format(CLIcolors.bcolors.STD))
         print("{}  ┗━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛".format(levelFormat))
+
+
+    @staticmethod
+    def interactionEndCLI(leftFiller):
+        print('{}┗━┳━━━━━━━━━━━━━━━━━━━┓'.format(leftFiller))
+        print('{}  ┃{} INTERACTION ENDED {}┃'.format(leftFiller, CLIcolors.bcolors.REDBKGRD, CLIcolors.bcolors.STD))
+        print("{}  ┗━━━━━━━━━━━━━━━━━━━┛".format(leftFiller))

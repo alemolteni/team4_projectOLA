@@ -1,6 +1,8 @@
 class bcolors:
     HEADER = '\033[95m'
-    BKGRD = '\u001b[48;5;94m'
+    #BKGRD = '\u001b[48;5;94m'
+    BKGRD = '\u001b[48;5;68m'
+    REDBKGRD = '\u001b[48;5;124m'
     STD = '\u001b[0m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
