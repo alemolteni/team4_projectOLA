@@ -4,13 +4,91 @@ from Model.InteractionNode import InteractionNode
 import math
 
 class UserClass:
-    #def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
-    def __init__(self, units_gamma_shape=3, units_gamma_scale=1, debug=True, features_generator=[], **arguments):
-        self.id = id
-        self.conversionRate = arguments['conversionRate']
-        self.clickProbability = arguments['clickProbability']
+    """
+    This class simulate the behaviour of a specific class of users. The users belonging to the class could have different features value.
 
-        self.alphas = arguments['alphas']
+    Attributes
+    ----------
+    conversionRate : matrix
+        A matrix of size #Products (rows) by #Prices (columns), e.g. 2 prods and 3 prices -> [[.3,.4,.1],[.43,.98,.02]]
+    clickProbability : GraphProbabilities
+        Object of type GraphProbabilities that states the probability of clicking a product given that it has been seen, i.e. P(click i | seen i)
+    alphas : vector
+        Vector of floats that describe the probability of starting from a specific product, length must be equal to #Products
+    productList : vector(Product) 
+        Vector of objects of type products
+    units_gamma_shape : int
+        Shape parameter of numpy gamma distribution used to model the number of units bought
+    units_gamma_scale : float
+        Scale parameter of numpy gamma distribution used to model the number of units bought
+    n_user_mean : int
+        Mean of a gaussian distribution for daily users 
+    n_user_variance : int
+        Variance of a gaussian distribution for daily users 
+    Lambda : float
+        Probability to see the second secondary product given that the first one is seen, i.e. P(see sec(i,2) | see sec(i,1)) = Lambda
+    features_generator : vector[dict["name","probability"]]
+        Binary features generator in which probability is P(bin_feat=1), it's an array of dict like this: [{"name":"Tall >180cm","probability":0.2}]
+    debug : bool
+        Print additional information about the execution
+
+    Methods
+    -------
+    setCurrentPrice(currentPrice)
+        Set the currently used price levels for the following interactions
+    generateEpisode()
+        Generate a session/interaction for a new user. It returns a InteractionNode object
+    """
+
+    #def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
+    def __init__(self, conversionRate=[], clickProbability=NULL, alphas=[], units_gamma_shape=3, units_gamma_scale=1, 
+                n_user_mean=15, n_user_variance=4, productList=[], Lambda=0.4, debug=True, features_generator=[]):
+        """
+        Parameters
+        ----------
+        conversionRate : matrix
+            A matrix of size #Products (rows) by #Prices (columns), e.g. 2 prods and 3 prices -> [[.3,.4,.1],[.43,.98,.02]]
+        
+        clickProbability : GraphProbabilities
+            Object of type GraphProbabilities that states the probability of clicking a product given that it has been seen, i.e. P(click i | seen i)
+        
+        alphas : vector
+            Vector of floats that describe the probability of starting from a specific product, length must be equal to #Products
+        
+        productList : vector(Product) 
+            Vector of objects of type products
+        
+        units_gamma_shape : int
+            Shape parameter of numpy gamma distribution used to model the number of units bought
+        
+        units_gamma_scale : float
+            Scale parameter of numpy gamma distribution used to model the number of units bought
+        
+        n_user_mean : int
+            Mean of a gaussian distribution for daily users 
+        
+        n_user_variance : int
+            Variance of a gaussian distribution for daily users 
+        
+        Lambda : float
+            Probability to see the second secondary product given that the first one is seen, i.e. P(see sec(i,2) | see sec(i,1)) = Lambda
+        
+        features_generator : vector[dict["name","probability"]]
+            Binary features generator in which probability is P(bin_feat=1), it's an array of dict like this: [{"name":"Tall >180cm","probability":0.2}]
+        
+        debug : bool
+            Print additional information about the execution
+        """
+
+        self.id = id
+        self.conversionRate = conversionRate
+
+        self.clickProbability = clickProbability
+        assert clickProbability != NULL
+
+        self.alphas = alphas
+        assert np.array(alphas).sum() == 1
+        assert len(conversionRate) == len(alphas) and len(alphas) == len(productList)
         # From alpha_i = [.3, .4, .3] generate [.3, .7, 1]
         self.product_alphas_intervals = np.full((len(self.alphas)), 0, dtype=float)
         cumulative = 0
@@ -20,13 +98,11 @@ class UserClass:
         self.product_alphas_intervals = np.array(self.product_alphas_intervals)    
         if debug: print(self.product_alphas_intervals)
 
-        self.n_bought = [arguments['n_bought_mean'], arguments['n_bought_variance']]
+        self.n_user = (n_user_mean, n_user_variance)
 
-        self.n_user = [arguments['n_user_mean'], arguments['n_user_variance']]
+        self.productList = productList
 
-        self.productList = arguments['productList']
-
-        self.Lambda = arguments['Lambda']
+        self.Lambda = Lambda
         assert self.Lambda >= 0 and self.Lambda <= 1
         self.currentPrice = []
         self.units_gamma_shape = units_gamma_shape
