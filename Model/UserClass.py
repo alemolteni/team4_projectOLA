@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import numpy as np
 from Model.InteractionNode import InteractionNode
 import math
@@ -40,8 +39,7 @@ class UserClass:
         Generate a session/interaction for a new user. It returns a InteractionNode object
     """
 
-    #def __init__(self, id, conversionRate, productList, clickProbability, alphas, n_bought_mean, n_bought_variance, n_user_mean, n_user_variance, Lambda):
-    def __init__(self, conversionRate=[], clickProbability=NULL, alphas=[], units_gamma_shape=3, units_gamma_scale=1, 
+    def __init__(self, conversionRate=[], clickProbability=None, alphas=[], units_gamma_shape=3, units_gamma_scale=1,
                 n_user_mean=15, n_user_variance=4, productList=[], Lambda=0.4, debug=True, features_generator=[]):
         """
         Parameters
@@ -83,7 +81,7 @@ class UserClass:
         self.conversionRate = conversionRate
 
         self.clickProbability = clickProbability
-        assert clickProbability != NULL
+        assert clickProbability is not None
 
         self.alphas = alphas
         assert np.array(alphas).sum() == 1
@@ -140,7 +138,6 @@ class UserClass:
         return gen_arr < self.features_prob
 
     def generateProductInteraction(self, currentProduct, history):
-        # TODO: implement 'conversionRate'
         if self.debug: print('\ncurrentProduct: ', currentProduct)
 
         buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]

@@ -13,11 +13,11 @@ class MyTestCase(unittest.TestCase):
     def test_UserEpisode(self):
         id = 0
         conversionRate = [
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1]
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1]
         ]
 
         clickProbability = GraphProbabilities(PROBABILITY_MATRIX)
