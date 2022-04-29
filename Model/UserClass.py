@@ -40,7 +40,7 @@ class UserClass:
     """
 
     def __init__(self, conversionRate=[], clickProbability=None, alphas=[], units_gamma_shape=3, units_gamma_scale=1,
-                n_user_mean=15, n_user_variance=4, productList=[], Lambda=0.4, debug=True, features_generator=[]):
+                n_user_mean=15, n_user_variance=4, productList=[], Lambda=0.4, debug=False, features_generator=[]):
         """
         Parameters
         ----------

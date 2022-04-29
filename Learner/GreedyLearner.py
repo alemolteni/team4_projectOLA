@@ -5,7 +5,7 @@ import numpy as np
 
 class GreedyLearner:
 
-    def __init__(self, prices):
+    def __init__(self):
         self.configuration_margin = [0, 0, 0, 0, 0] #margini da valutare, ognuno per una delle 5 configurazioni di prezzo
         self.t = -1 #per provare la configurazione tutti 0
         self.optimal_configuration = [0, 0, 0, 0, 0] #configurazione di prezzo ottimale
