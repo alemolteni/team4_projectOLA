@@ -156,21 +156,26 @@ class UserClass:
         #           history is updated: --> history = [0, 1, 0, 0, 1]
         history[currentProduct] = 0
 
+        # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
+        # displayed
+
+        firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
+        if self.debug: print('sec1: ', firstSlot)
+        secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
+        if self.debug: print('sec2: ', secondSlot)
+
+        # Initialization of variables sec1Bought and sec2Bought
+        sec1Bought = 0
+        sec2Bought = 0
+
         # If the primary product displayed is bought that the click probability of the two linked secondary products
         # must be addressed
         if bought == 1:
             units = np.random.gamma(self.units_gamma_shape, self.units_gamma_scale, None)
-            units = math.ceil(units) # Ceil bc we weant at least one unit
+            units = math.ceil(units) # Ceil bc we want at least one unit
             assert units > 0
 
             if self.debug: print('units bought: ', units)
-
-            # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
-            # displayed
-            firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
-            if self.debug: print('sec1: ', firstSlot)
-            secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
-            if self.debug: print('sec2: ', secondSlot)
 
             # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
             # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
