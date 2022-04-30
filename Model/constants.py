@@ -2,7 +2,7 @@
 PRODUCT_NUMBER = 5
 
 # Dictionary containing the secondary products pairs linked to each product
-SECONDARY_PRODUCTS = {'1': [1, 2], '2': [3, 4], '3': [1, 0], '4': [0, 4], '5': [3, 2]}
+SECONDARY_PRODUCTS = {'0': [1, 2], '1': [3, 4], '2': [1, 0], '3': [0, 4], '4': [3, 2]}
 
 # Graph's edges matrix
 

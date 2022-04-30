@@ -22,3 +22,12 @@ class GraphProbabilities:
         in the FIRST OF THE SECONDARIES SLOT of product P (startNode)
         """
         return self.weightMatrix[startNode][endNode]
+
+    def shape(self):
+        return (len(self.weightMatrix),len(self.weightMatrix[0]))
+
+    def multiplyElementWise(self, graph_prob):
+        for i in range(0,len(self.weightMatrix)):
+            for j in range(0,len(self.weightMatrix[0])):
+                self.weightMatrix[i][j] = self.weightMatrix[i][j] * graph_prob.getEdgeProbability(i,j)
+        return self
