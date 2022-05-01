@@ -10,6 +10,7 @@ class GraphEvaluator:
         assert len(products_list) == len(margins)
         assert click_prob_matrix is not None
 
+        click_prob_matrix = np.array(click_prob_matrix).tolist()
         self.products_list = products_list
         self.lambda_prob = lambda_prob
         self.conversion_rates = np.array(conversion_rates)
