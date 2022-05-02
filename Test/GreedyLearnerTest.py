@@ -32,7 +32,6 @@ class MyTestCase(unittest.TestCase):
         pulledArm = gLearner.pull_arm()
         self.assertEqual(pulledArm, [0, 0, 0, 0, 0])
 
-        self.assertEqual(True, True)
 
     def test_greedyLearnerSecondOptima(self):
         gLearner = GreedyLearner()
@@ -95,15 +94,17 @@ class MyTestCase(unittest.TestCase):
 
     def test_greedyLearnerLaterOptima(self):
         gLearner = GreedyLearner()
-        for i in range(0,301):
+        for i in range(0,300):
             pulledArm = gLearner.pull_arm()
+            #print(pulledArm)
             gLearner.update(i)
 
         for i in range(0,298):
             pulledArm = gLearner.pull_arm()
-            gLearner.update(1)
+            #print(pulledArm)
+            gLearner.update(1000)
 
-        self.assertEqual(pulledArm, [0, 0, 0, 0, 4])
+        self.assertEqual(pulledArm, [3, 3, 3, 3, 3])
 
 if __name__ == '__main__':
     unittest.main()
