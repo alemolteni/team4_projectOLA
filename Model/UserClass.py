@@ -84,7 +84,7 @@ class UserClass:
         assert clickProbability is not None
 
         self.alphas = alphas
-        assert np.array(alphas).sum() == 1
+        assert np.array(alphas).sum() > 0.9999999
         assert len(conversionRate) == len(alphas) and len(alphas) == len(productList)
         # From alpha_i = [.3, .4, .3] generate [.3, .7, 1]
         self.product_alphas_intervals = np.full((len(self.alphas)), 0, dtype=float)
@@ -101,7 +101,7 @@ class UserClass:
 
         self.Lambda = Lambda
         assert 0 <= self.Lambda <= 1
-        self.currentPrice = []
+        self.currentPrice = [0 for i in range(0,len(self.alphas))]
         self.units_gamma_shape = units_gamma_shape
         self.units_gamma_scale = units_gamma_scale
         self.debug = debug

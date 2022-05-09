@@ -1,21 +1,36 @@
 import numpy as np
 from Model.UserClass import *
+from Model.Product import *
+from Model.GraphProbabilities import *
+
+import json
 
 class Environment:
     """
     The enviroment models the behaviour of the project website, it gives at each round a set of interactions/sessions
     """
-    def __init__(self, classes):
+    def __init__(self, classes=[], config_path=None):
         """
         Initialize the enviroment with the vector of UserClass objects
         """
         self.classes = classes
-        assert len(classes) > 0
-        self.n_product = len(classes[0].alphas)
-        self.price_levels = np.full((self.n_product), 1, dtype=int)
         self.t = 0
         self.listener = []
         self.listener_timing = np.array([], dtype=int)
+        if config_path != None:
+            f = open(config_path)
+            config = json.load(f)
+            f.close()
+            for uc in config:
+                productList = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
+                self.classes.append(UserClass(conversionRate=uc["conversionRates"], clickProbability=GraphProbabilities(uc["clickProbability"]), alphas=uc["alphas"],
+                              Lambda=uc["lambda"], n_user_mean=uc["usersMean"], n_user_variance=uc["usersVariance"], productList=productList,
+                              features_generator=uc["features"], units_gamma_scale=uc["unitsScale"], units_gamma_shape=uc["unitsShape"]))
+        
+        assert len(classes) > 0
+        self.n_product = len(classes[0].alphas)
+        self.price_levels = np.full((self.n_product), 1, dtype=int)
+
 
     def addTimeListener(self, fireAt, fireFunction):
         """
