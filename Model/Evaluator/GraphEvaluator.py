@@ -1,23 +1,15 @@
+from Model.Evaluator.Evaluator import Evaluator
 from Model.GraphProbabilities import GraphProbabilities
 from Model.Evaluator.StepNode import StepNode
 import numpy as np
+from Model.Evaluator.Evaluator import Evaluator
 
-
-class GraphEvaluator:
+class GraphEvaluator(Evaluator):
     def __init__(self, products_list=[], click_prob_matrix=None, lambda_prob=0.5, conversion_rates=[], 
                 alphas=[], margins=[], verbose=False):
-        assert len(products_list) == len(conversion_rates) and len(products_list) == len(alphas)
-        assert len(products_list) == len(margins)
-        assert click_prob_matrix is not None
+        super(GraphEvaluator, self).__init__(products_list=products_list, click_prob_matrix=click_prob_matrix, lambda_prob=lambda_prob, conversion_rates=conversion_rates, 
+                alphas=alphas, margins=margins, verbose=verbose)
 
-        click_prob_matrix = np.array(click_prob_matrix).tolist()
-        self.products_list = products_list
-        self.lambda_prob = lambda_prob
-        self.conversion_rates = np.array(conversion_rates)
-        self.n_products = len(products_list)
-        self.alphas = np.array(alphas)
-        self.margins = np.array(margins)
-        self.verbose = verbose
         lambda_mat = np.full((self.n_products,self.n_products), 0, dtype=float)
         for i in range(0,len(products_list)):
             assert i == products_list[i].getProductNumber()
@@ -33,7 +25,7 @@ class GraphEvaluator:
             conv_mat.append(np.full((len(products_list)), conversion_rates[i]).tolist())
         #if verbose: print(conv_mat)
         
-        w_matrix = GraphProbabilities(click_prob_matrix)
+        w_matrix = GraphProbabilities(self.click_prob_matrix)
         lambda_matrix = GraphProbabilities(lambda_mat.tolist())
         conversion_matrix = GraphProbabilities(conv_mat)
 

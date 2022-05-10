@@ -21,7 +21,8 @@ class Environment:
             f = open(config_path)
             config = json.load(f)
             f.close()
-            for uc in config:
+            conf_classes = config["classes"]
+            for uc in conf_classes:
                 productList = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
                 self.classes.append(UserClass(conversionRate=uc["conversionRates"], clickProbability=GraphProbabilities(uc["clickProbability"]), alphas=uc["alphas"],
                               Lambda=uc["lambda"], n_user_mean=uc["usersMean"], n_user_variance=uc["usersVariance"], productList=productList,
