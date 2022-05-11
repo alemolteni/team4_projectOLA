@@ -1,4 +1,5 @@
 from Model import CLIcolors
+import numpy as np
 
 
 class InteractionNode:
@@ -8,7 +9,7 @@ class InteractionNode:
     the user on the site
     """
 
-    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Bought, sec2Bought):
+    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Opened, sec2Opened, num_products=5):
         """
         Each interaction node keeps track of:
         - product: id of the product type involved in the interaction;
@@ -30,8 +31,9 @@ class InteractionNode:
         self.featuresValues = []
         self.firstSlot = firstSlot
         self.secondSlot = secondSlot
-        self.sec1Bought = sec1Bought
-        self.sec2Bought = sec2Bought
+        self.sec1Opened = sec1Opened
+        self.sec2Opened = sec2Opened
+        self.num_products = num_products
 
     def setFeatures(self, featuresNames, featuresValues):
         self.featuresNames = featuresNames
@@ -92,3 +94,31 @@ class InteractionNode:
         print('{}┗━┳━━━━━━━━━━━━━━━━━━━┓'.format(leftFiller))
         print('{}  ┃{} INTERACTION ENDED {}┃'.format(leftFiller, CLIcolors.bcolors.REDBKGRD, CLIcolors.bcolors.STD))
         print("{}  ┗━━━━━━━━━━━━━━━━━━━┛".format(leftFiller))
+
+    
+    
+    def linearizeVisits(self):
+        visits = np.full((self.num_products), 0)
+        visits[self.product] = 1
+        for next in self.following:
+            visits = np.add(visits,next.linearizeVisits())
+        return visits
+
+    def linearizeBought(self):
+        bought = np.full((self.num_products), 0)
+        bought[self.product] = self.bought
+        for next in self.following:
+            bought = np.add(bought,next.linearizeBought())
+        return bought
+
+    def linearizeStart(self):
+        alpha = np.full((self.num_products), 0)
+        alpha[self.product] = 1
+        return alpha
+
+    def linearizeNumUnits(self):
+        uu = np.full((self.num_products), 0)
+        uu[self.product] = self.units
+        for next in self.following:
+            uu = np.add(uu,next.linearizeVisits())
+        return uu
