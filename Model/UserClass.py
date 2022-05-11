@@ -124,9 +124,10 @@ class UserClass:
         assert 0 <= currentProduct < len(self.alphas)
 
         # Initialize the history of products to be visited
-        history = np.full((len(self.alphas)), 1, dtype=int)
+        self.history = np.full((len(self.alphas)), 1, dtype=int)
+        self.history[currentProduct] = 0
 
-        userInteractions = self.generateProductInteraction(currentProduct, history)
+        userInteractions = self.generateProductInteraction(currentProduct)
         userInteractions.setFeatures(self.features_names, self.generateFeature())
         return userInteractions
 
@@ -141,7 +142,7 @@ class UserClass:
         gen_arr = np.random.rand(len(self.features_prob))
         return gen_arr < self.features_prob
 
-    def generateProductInteraction(self, currentProduct, history):
+    def generateProductInteraction(self, currentProduct):
         if self.debug: print('\ncurrentProduct: ', currentProduct)
 
         buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]
@@ -158,7 +159,7 @@ class UserClass:
         #           the user then click on product 3, so product 3 is displayed as primary (generateProductInteraction()
         #           is summoned with product 3 as input).
         #           history is updated: --> history = [0, 1, 0, 0, 1]
-        history[currentProduct] = 0
+        self.history[currentProduct] = 0
 
         # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
         # displayed
@@ -169,8 +170,8 @@ class UserClass:
         if self.debug: print('sec2: ', secondSlot)
 
         # Initialization of variables sec1Bought and sec2Bought
-        sec1Bought = 0
-        sec2Bought = 0
+        sec1Opened = 0
+        sec2Opened = 0
 
         # If the primary product displayed is bought that the click probability of the two linked secondary products
         # must be addressed
@@ -184,26 +185,27 @@ class UserClass:
             # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
             # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
             # has to be multiplied by the factor 'Lambda'
-            clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * history[firstSlot]
-            clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * history[secondSlot]
+            clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * self.history[firstSlot]
 
             # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
             # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
-            sec1Bought = np.random.binomial(1, clickProbSec1)
-            if self.debug: print('sec1Bought: ', sec1Bought)
-            if sec1Bought == 1:
-                following.append(self.generateProductInteraction(firstSlot, history))
+            sec1Opened = np.random.binomial(1, clickProbSec1)
+            if self.debug: print('sec1Opened: ', sec1Opened)
+            if sec1Opened == 1:
+                following.append(self.generateProductInteraction(firstSlot))
 
-            sec2Bought = np.random.binomial(1, clickProbSec2)
-            if self.debug: print('sec2Bought: ', sec2Bought)
-            if sec2Bought == 1:
-                following.append(self.generateProductInteraction(secondSlot, history))
+            clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * self.history[secondSlot]
+            sec2Opened = np.random.binomial(1, clickProbSec2)
+            if self.debug: print('sec2Opened: ', sec2Opened)
+            if sec2Opened == 1:
+                following.append(self.generateProductInteraction(secondSlot))
 
 
 
         # At the end of the interaction between the user and the current product an INTERACTION NODE is generated to
         # keep track of the user history
         interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
-                                          firstSlot=firstSlot, secondSlot=secondSlot, sec1Bought=sec1Bought,
-                                          sec2Bought=sec2Bought, bought=bought, units=units, following=following)
+                                          firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
+                                          sec2Opened=sec2Opened, bought=bought, units=units, following=following,
+                                          num_products=len(self.alphas))
         return interactionNode
