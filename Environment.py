@@ -26,7 +26,7 @@ class Environment:
                 productList = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
                 self.classes.append(UserClass(conversionRate=uc["conversionRates"], clickProbability=GraphProbabilities(uc["clickProbability"]), alphas=uc["alphas"],
                               Lambda=uc["lambda"], n_user_mean=uc["usersMean"], n_user_variance=uc["usersVariance"], productList=productList,
-                              features_generator=uc["features"], units_gamma_scale=uc["unitsScale"], units_gamma_shape=uc["unitsShape"]))
+                              features_generator=uc["features"], units_gamma_shape=uc["unitsShape"]))
         
         assert len(classes) > 0
         self.n_product = len(classes[0].alphas)
@@ -65,6 +65,7 @@ class Environment:
         episodes = []
         for userClass in self.classes:
             dailyUser = math.ceil(np.random.normal(userClass.n_user[0], userClass.n_user[1]))
+            userClass.generateNewAlphas()
             for i in range(0,dailyUser):
                 episodes.append(userClass.generateEpisode())
         return episodes

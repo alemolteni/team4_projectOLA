@@ -39,7 +39,7 @@ class UserClass:
         Generate a session/interaction for a new user. It returns a InteractionNode object
     """
 
-    def __init__(self, conversionRate=[], clickProbability=None, alphas=[], units_gamma_shape=3, units_gamma_scale=1,
+    def __init__(self, conversionRate=[], clickProbability=None, alphas=[], units_gamma_shape=[],
                 n_user_mean=15, n_user_variance=4, productList=[], Lambda=0.4, debug=False, features_generator=[]):
         """
         Parameters
@@ -86,6 +86,7 @@ class UserClass:
         self.alphas = alphas
         assert np.array(alphas).sum() > 0.9999999
         assert len(conversionRate) == len(alphas) and len(alphas) == len(productList)
+        assert len(alphas) == len(units_gamma_shape)
         # From alpha_i = [.3, .4, .3] generate [.3, .7, 1]
         self.product_alphas_intervals = np.full((len(self.alphas)), 0, dtype=float)
         cumulative = 0
@@ -103,7 +104,6 @@ class UserClass:
         assert 0 <= self.Lambda <= 1
         self.currentPrice = [0 for i in range(0,len(self.alphas))]
         self.units_gamma_shape = units_gamma_shape
-        self.units_gamma_scale = units_gamma_scale
         self.debug = debug
         
         self.features_prob = []
@@ -129,6 +129,10 @@ class UserClass:
         userInteractions = self.generateProductInteraction(currentProduct, history)
         userInteractions.setFeatures(self.features_names, self.generateFeature())
         return userInteractions
+
+    def generateNewAlphas(self):
+        self.product_alphas_intervals = np.cumsum(np.random.dirichlet(self.alphas))
+        return 
 
     def setCurrentPrice(self, currentPrice):
         self.currentPrice = currentPrice
@@ -171,7 +175,7 @@ class UserClass:
         # If the primary product displayed is bought that the click probability of the two linked secondary products
         # must be addressed
         if bought == 1:
-            units = np.random.gamma(self.units_gamma_shape, self.units_gamma_scale, None)
+            units = np.random.gamma(self.units_gamma_shape[currentProduct], 1, None)
             units = math.ceil(units) # Ceil bc we want at least one unit
             assert units > 0
 

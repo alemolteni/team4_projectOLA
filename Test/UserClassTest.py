@@ -33,7 +33,8 @@ class MyTestCase(unittest.TestCase):
         Lambda = 0.8
 
         userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, alphas=alphas,
-                              Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
+                              Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, 
+                              productList=productList, units_gamma_shape=[0.75, 0.75, 0.75, 0.75, .75],
                               features_generator=[{"name":"Over 18","probability":0.6},{"name":"Male","probability":0.9}])
 
         # pp = pprint.PrettyPrinter(indent=4)

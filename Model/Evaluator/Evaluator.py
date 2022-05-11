@@ -2,9 +2,10 @@ import numpy as np
 
 class Evaluator:
     def __init__(self, products_list=[], click_prob_matrix=None, lambda_prob=0.5, conversion_rates=[], 
-                alphas=[], margins=[], verbose=False):
+                alphas=[], margins=[], verbose=False, units_mean=[]):
         assert len(products_list) == len(conversion_rates) and len(products_list) == len(alphas)
         assert len(products_list) == len(margins)
+        assert len(alphas) == len(units_mean)
         assert click_prob_matrix is not None
 
         self.click_prob_matrix = np.array(click_prob_matrix).tolist()
@@ -14,6 +15,7 @@ class Evaluator:
         self.n_products = len(products_list)
         self.alphas = np.array(alphas)
         self.margins = np.array(margins)
+        self.units_mean = np.array(units_mean)
         self.verbose = verbose
 
     def computeMargin(self):

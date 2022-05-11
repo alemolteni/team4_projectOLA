@@ -6,9 +6,9 @@ from Model.Evaluator.Evaluator import Evaluator
 
 class GraphEvaluator(Evaluator):
     def __init__(self, products_list=[], click_prob_matrix=None, lambda_prob=0.5, conversion_rates=[], 
-                alphas=[], margins=[], verbose=False):
+                alphas=[], margins=[], units_mean=[], verbose=False):
         super(GraphEvaluator, self).__init__(products_list=products_list, click_prob_matrix=click_prob_matrix, lambda_prob=lambda_prob, conversion_rates=conversion_rates, 
-                alphas=alphas, margins=margins, verbose=verbose)
+                alphas=alphas, margins=margins, units_mean=units_mean, verbose=verbose)
 
         lambda_mat = np.full((self.n_products,self.n_products), 0, dtype=float)
         for i in range(0,len(products_list)):
@@ -69,7 +69,7 @@ class GraphEvaluator(Evaluator):
         for i in range(0,len(self.products_list)):
             visiting_prob = self.computeSingleProduct(i)
             # Margin if alpha = [1 0 0 0 0]
-            single_margins[i] = np.multiply(visiting_prob,np.multiply(self.margins,self.conversion_rates)).sum()
+            single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,self.units_mean),self.conversion_rates)).sum()
             if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
         # Weight the single margin by alpha
         return np.multiply(single_margins, self.alphas).sum()
