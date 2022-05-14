@@ -23,7 +23,7 @@ class UCB:
         log_time = np.full((self.num_products, self.num_prices), 2*math.log(self.t), dtype=float)
         n_arms = self.times_arms_pulled
         upper_deviation = np.sqrt(np.divide(log_time, n_arms, out=np.full_like(log_time, np.inf, dtype=float), where=n_arms!=0))
-        # XXX must be the expected reward and must be computed for each product and price level
+        self.expected_reward = self.compute_expected_rewards()
         upper_bound = np.add(self.expected_reward, upper_deviation)
         self.configuration = np.argmax(upper_bound, axis=1)
         for i in range(0,len(self.configuration)):
