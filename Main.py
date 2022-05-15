@@ -5,6 +5,9 @@ from Model.constants import *
 from Model.GraphProbabilities import *
 
 from Learner.GreedyLearner import *
+from Learner.BruteForce import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def totalMarginPerNode(envReturn, marginsPerPrice, pulledArm):
@@ -40,27 +43,34 @@ productList = [Product(int(key), SECONDARY_PRODUCTS[key]) for key in SECONDARY_P
 
 Lambda = 0.8
 
-userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, debug=False, alphas=alphas,
-                      Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
-                      units_gamma_shape = n_bought_gamma_shape, units_gamma_scale = n_bought_gamma_scale,
-                      features_generator=[{"name": "Over 18", "probability": 0.6},
-                                          {"name": "Male", "probability": 0.9}])
-environment = Environment([userClass])
+#userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, debug=False, alphas=alphas,
+ #                     Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
+  #                    units_gamma_shape = n_bought_gamma_shape, units_gamma_scale = n_bought_gamma_scale,
+   #                   features_generator=[{"name": "Over 18", "probability": 0.6},
+    #                                      {"name": "Male", "probability": 0.9}])
 
-gLearner = GreedyLearner(debug=True)
 
-marginsPerPrice = [[1, 10, 1, 1],  # Product 1
-                   [1, -1, 0, 0],  # Product 2
-                   [1, 10, 1, 1],  # Product 3
-                   [1, 10, 50, 1],  # Product 4
-                   [1, 10, 100, 1]  # Product 5
-                   ]
+#Ignore all the above
 
-n_experiments = 100
+environment = Environment(config_path="Configs/Config2.json")
+gLearner = BruteForce(debug=True)
+
+marginsPerPrice = [
+    [1, 2, 10, 16],
+    [10, 20, 35, 40],
+    [12, 15, 18, 21],
+    [3, 8, 15, 21],
+    [8, 10, 17, 26]
+  ]
+
+n_experiments = 3000
+
 optimal_arm = []
 
-for i in range(0, 100):
-    pulledArm = gLearner.pull_arm()
+allMargin = np.array([])
+
+for i in range(0, 1030):
+    pulledArm = [0, 0, 0, 0, 0]#= gLearner.pull_arm()
     print(pulledArm)
     environment.setPriceLevels(pulledArm)
     envReturn = environment.round()
@@ -71,8 +81,18 @@ for i in range(0, 100):
         envReturn = environment.round()
 
     margin = price_configuration_margin / n_experiments
+    print(margin)
+    allMargin = np.append(allMargin, margin)
     gLearner.update(margin)
 
+
+print("Optima", gLearner.get_optima())
+print("Optima margin", gLearner.get_optima_margin())
+x = np.linspace(0, 1030, 1030)
+
+fig, ax = plt.subplots()
+ax.plot(x, allMargin)
+plt.show()
     #if np.array_equal(optimal_arm, pulledArm):
        #break
 
