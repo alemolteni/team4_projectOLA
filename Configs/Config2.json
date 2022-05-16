@@ -28,7 +28,7 @@
     ],
     "secondary": {"0": [1, 2], "1": [0, 2], "2": [0, 1], "3": [0, 1], "4": [0, 1]},
     "unitsShape": [0.75, 1.25, 1.6, 2.1, 0.94],
-    "unitsScale": 0.5,
+    "unitsScale": 1,
     "usersMean": 30,
     "usersVariance": 1,
     "features": [{"name":"Young","probability":0.7},{"name":"Male","probability":0.5}]
@@ -52,7 +52,7 @@
     ],
     "secondary": {"0": [2, 3], "1": [2, 3], "2": [3, 4], "3": [2, 4], "4": [2, 3]},
     "unitsShape": [0.75, 1.25, 1.6, 2.1, 0.94],
-    "unitsScale": 0.5,
+    "unitsScale": 1,
     "usersMean": 30,
     "usersVariance": 1,
     "features": [{"name":"Young","probability":0.7},{"name":"Female","probability":0.5}]
@@ -76,7 +76,7 @@
     ],
     "secondary": {"0": [1, 2], "1": [0, 2], "2": [3, 4], "3": [2, 4], "4": [2, 3]},
     "unitsShape": [0.75, 1.25, 1.6, 2.1, 0.94],
-    "unitsScale": 0.8,
+    "unitsScale": 1,
     "usersMean": 10,
     "usersVariance": 1,
     "features": [{"name":"Adult","probability":0.3},{"name":"","probability":1}]

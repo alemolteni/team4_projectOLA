@@ -6,6 +6,7 @@ from Model.GraphProbabilities import *
 
 from Learner.GreedyLearner import *
 from Learner.TS_CR import *
+from Learner.UCB_CR import *
 from Learner.BruteForce import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,81 +56,87 @@ def testTS_CR():
     print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
     return;
 
-testTS_CR()
 
-conversionRate = [
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4]
-        ]
+def testUCB_CR():
+    env = Environment(config_path="Configs/config1.json")
+    margins = [
+        [1, 2, 10, 16],
+        [10, 20, 35, 40],
+        [12, 15, 18, 21],
+        [3, 8, 15, 21],
+        [8, 10, 17, 26]
+    ]
+    conv_rates = [[0.7, 0.7, 0.4, 0.2],
+                  [0.9, 0.8, 0.6, 0.2],
+                  [0.9, 0.7, 0.5, 0.3],
+                  [0.8, 0.7, 0.4, 0.3],
+                  [0.9, 0.65, 0.45, 0.2]]
 
-clickProbability = GraphProbabilities(PROBABILITY_MATRIX)
-alphas = [0.2, 0.2, 0.2, 0.2, 0.2]
+    for i in range(0, 5):
+        print('{} - {} - {} - {}'.format(margins[i][0] * conv_rates[i][0], margins[i][1] * conv_rates[i][1],
+                                         margins[i][2] * conv_rates[i][2], margins[i][3] * conv_rates[i][3]))
 
-n_bought_gamma_shape = 2
-n_bought_gamma_scale = 0.5
-n_user_mean = 10
-n_user_variance = 1
+    learner = UCB_CR(margins=margins)
+    n_experiments = 100
 
-productList = [Product(int(key), SECONDARY_PRODUCTS[key]) for key in SECONDARY_PRODUCTS]
+    for t in range(1, n_experiments):
+        conf = learner.pull_arm()
+        print(conf)
+        env.setPriceLevels(conf)
+        rew = env.round()
+        learner.update(rew)
 
-Lambda = 0.8
-
-#userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, debug=False, alphas=alphas,
- #                     Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
-  #                    units_gamma_shape = n_bought_gamma_shape, units_gamma_scale = n_bought_gamma_scale,
-   #                   features_generator=[{"name": "Over 18", "probability": 0.6},
-    #                                      {"name": "Male", "probability": 0.9}])
+    print("Pulled arm {} at time {}:".format(conf, t))
+    print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
+    return
 
 
-#Ignore all the above
+def testGreedy():
+    environment = Environment(config_path="Configs/config1.json")
+    gLearner = GreedyLearner(debug=True)
 
-environment = Environment(config_path="Configs/config1.json")
-gLearner = BruteForce(debug=True)
+    marginsPerPrice = [
+        [1, 2, 10, 16],
+        [10, 20, 35, 40],
+        [12, 15, 18, 21],
+        [3, 8, 15, 21],
+        [8, 10, 17, 26]
+    ]
 
-marginsPerPrice = [
-    [1, 2, 10, 16],
-    [10, 20, 35, 40],
-    [12, 15, 18, 21],
-    [3, 8, 15, 21],
-    [8, 10, 17, 26]
-  ]
+    n_experiments = 100
 
-n_experiments = 100
+    optimal_arm = []
 
-optimal_arm = []
+    allMargin = np.array([])
 
-allMargin = np.array([])
-
-for i in range(0, 1030):
-    pulledArm = gLearner.pull_arm()
-    print(pulledArm)
-    environment.setPriceLevels(pulledArm)
-    envReturn = environment.round()
-
-    price_configuration_margin = 0
-    for j in range(0, n_experiments):
-        price_configuration_margin += totalMarginPerNode(envReturn, marginsPerPrice, pulledArm)
+    for i in range(0, 1030):
+        pulledArm = gLearner.pull_arm()
+        print(pulledArm)
+        environment.setPriceLevels(pulledArm)
         envReturn = environment.round()
 
-    margin = price_configuration_margin / n_experiments
-    print(margin)
-    allMargin = np.append(allMargin, margin)
-    gLearner.update(margin)
+        price_configuration_margin = 0
+        for j in range(0, n_experiments):
+            price_configuration_margin += totalMarginPerNode(envReturn, marginsPerPrice, pulledArm)
+            envReturn = environment.round()
 
+        margin = price_configuration_margin / n_experiments
+        print(margin)
+        allMargin = np.append(allMargin, margin)
+        gLearner.update(margin)
 
-print("Optima", gLearner.get_optima())
-print("Optima margin", gLearner.get_optima_margin())
-x = np.linspace(0, 1030, 1030)
+    print("Optima", gLearner.get_optima())
+    print("Optima margin", gLearner.get_optima_margin())
+    x = np.linspace(0, 1030, 1030)
 
-fig, ax = plt.subplots()
-ax.plot(x, allMargin)
-plt.show()
-    #if np.array_equal(optimal_arm, pulledArm):
-       #break
+    fig, ax = plt.subplots()
+    ax.plot(x, allMargin)
+    plt.show()
+    # if np.array_equal(optimal_arm, pulledArm):
+    # break
 
-    #optimal_arm = pulledArm
+    # optimal_arm = pulledArm
 
-#print(optimal_arm)
+    # print(optimal_arm)
+
+testUCB_CR()
