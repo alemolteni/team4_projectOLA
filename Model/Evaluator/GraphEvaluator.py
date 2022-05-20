@@ -31,7 +31,7 @@ class GraphEvaluator(Evaluator):
 
         y_matrix = w_matrix.multiplyElementWise(lambda_matrix)
         self.y_matrix = y_matrix.multiplyElementWise(conversion_matrix)
-        if verbose: print(self.y_matrix.weightMatrix)
+        #if verbose: print(self.y_matrix.weightMatrix)
 
     def computeSingleProduct(self, product):
         firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix)
@@ -59,7 +59,7 @@ class GraphEvaluator(Evaluator):
                 reached_nodes = reached_nodes + str(index) + "; "
                 # existing_nodes[k].computeProbability() is the probability of visiting "index" in (i+1)-steps
                 inverse_prob[index] = inverse_prob[index] * (1 - existing_nodes[k].computeProbability())
-            if self.verbose: print("Reached nodes in {}-step: {}".format(i+1,reached_nodes))
+            #if self.verbose: print("Reached nodes in {}-step: {}".format(i+1,reached_nodes))
             nodes = existing_nodes
         # Probability of visiting product
         return  1 - inverse_prob 
@@ -70,7 +70,7 @@ class GraphEvaluator(Evaluator):
             visiting_prob = self.computeSingleProduct(i)
             # Margin if alpha = [1 0 0 0 0]
             single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,self.units_mean),self.conversion_rates)).sum()
-            if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
+            #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
         # Weight the single margin by alpha
         return np.multiply(single_margins, self.alphas).sum()
             
