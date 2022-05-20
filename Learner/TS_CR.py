@@ -19,8 +19,6 @@ class TS_CR(TS):
         for p in secondary_prod:
             self.secondary_prod.append([p.getSecondaryProduct(0), p.getSecondaryProduct(1)])
 
-        print(self.secondary_prod)
-
         self.update_conversion_rates()
         # Take as input also alphas or other information known needed for computing expected rewards
         # in this class only conversion rates are unknown
