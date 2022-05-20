@@ -72,11 +72,20 @@ def testUCB_CR():
                   [0.8, 0.7, 0.4, 0.3],
                   [0.9, 0.65, 0.45, 0.2]]
 
-    for i in range(0, 5):
-        print('{} - {} - {} - {}'.format(margins[i][0] * conv_rates[i][0], margins[i][1] * conv_rates[i][1],
-                                         margins[i][2] * conv_rates[i][2], margins[i][3] * conv_rates[i][3]))
+    clickProb = [
+      [0, 0.5, 0.6, 0, 0],
+      [0, 0, 0.4, 0, 0.2],
+      [0, 0, 0, 0.8, 0.7],
+      [0.6, 0, 0, 0, 0.5],
+      [0, 0.9, 0, 0.3, 0]
+    ]
 
-    learner = UCB_CR(margins=margins)
+    alphas = [0.3, 0.25, 0.15, 0.15, 0.15]
+
+    secondary = {0: [1, 2], 1: [2, 4], 2: [3, 4], 3: [4, 0], 4: [1, 3]} #Changed secondary sintax to avoid strings
+
+    learner = UCB_CR(margins=margins, clickProbability=clickProb, alphas=alphas, secondary=secondary, Lambda=0.7, debug=True)
+    #learner = UCB(margins=margins)
     n_experiments = 100
 
     for t in range(1, n_experiments):
@@ -87,7 +96,7 @@ def testUCB_CR():
         learner.update(rew)
 
     print("Pulled arm {} at time {}:".format(conf, t))
-    print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
+
     return
 
 

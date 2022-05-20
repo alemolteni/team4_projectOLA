@@ -13,7 +13,7 @@ class UCB:
         # Incremental average m(n+1) = m(n) + (new_val - m(n)) / n+1
         self.conversion_rates = np.full((num_products, num_prices), 0.0)
         self.times_arms_pulled = np.full((num_products, num_prices), 0.0)
-        self.expected_reward = np.full((self.num_products, self.num_prices), 1.0)
+        self.expected_reward = np.full((self.num_products, self.num_prices), 0.0)
         self.margins = margins
 
     def pull_arm(self):
@@ -24,9 +24,11 @@ class UCB:
         log_time = np.full((self.num_products, self.num_prices), 2*math.log(self.t), dtype=float)
         n_arms = self.times_arms_pulled
         upper_deviation = np.sqrt(np.divide(log_time, n_arms, out=np.full_like(log_time, np.inf, dtype=float), where=n_arms!=0))
+
         self.expected_reward = self.compute_expected_rewards()
-        #print(self.expected_reward)
+        if self.debug: print("Reward: ", self.expected_reward)
         upper_bound = np.add(self.expected_reward, upper_deviation)
+
         self.configuration = np.argmax(upper_bound, axis=1)
         for i in range(0,len(self.configuration)):
             self.times_arms_pulled[i][self.configuration[i]] += 1
@@ -40,7 +42,8 @@ class UCB:
         
         visits = np.full((self.num_products),0)
         bought = np.full((self.num_products),0)
-        for inter in interactions:
+        #print(interactions)
+        for inter in interactions["episodes"]:
             visits = np.add(visits, inter.linearizeVisits())
             bought = np.add(bought, inter.linearizeBought())
         episode_conv_rates = np.divide(bought, visits, out=np.full_like(bought, 0, dtype=float), where=visits!=0)
@@ -49,7 +52,7 @@ class UCB:
             # Incremental average m(n+1) = m(n) + (new_val - m(n)) / n+1
             mean = self.conversion_rates[i][self.configuration[i]]
             self.conversion_rates[i][self.configuration[i]] = (mean + (episode_conv_rates[i] - mean) / self.t)
-        #print (self.conversion_rates)
+        if self.debug: print ("Conversion rates: ", self.conversion_rates)
         return
 
     def compute_expected_rewards(self):
