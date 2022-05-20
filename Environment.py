@@ -13,7 +13,9 @@ class Environment:
         """
         Initialize the enviroment with the vector of UserClass objects
         """
-        self.classes = classes
+        #self.classes = classes
+        self.classes = list()
+        assert len(classes) == 0
         self.t = 0
         self.listener = []
         self.listener_timing = np.array([], dtype=int)
@@ -27,9 +29,9 @@ class Environment:
                 self.classes.append(UserClass(conversionRate=uc["conversionRates"], clickProbability=GraphProbabilities(uc["clickProbability"]), alphas=uc["alphas"],
                               Lambda=uc["lambda"], n_user_mean=uc["usersMean"], n_user_variance=uc["usersVariance"], productList=productList,
                               features_generator=uc["features"], units_gamma_shape=uc["unitsShape"]))
-        
-        assert len(classes) > 0
-        self.n_product = len(classes[0].alphas)
+
+        assert len(self.classes) > 0
+        self.n_product = len(self.classes[0].alphas)
         self.price_levels = np.full((self.n_product), 1, dtype=int)
 
 
@@ -63,9 +65,11 @@ class Environment:
             func(self.t, self)
 
         episodes = []
+        totalUsersInRound = 0
         for userClass in self.classes:
-            dailyUser = math.ceil(np.random.normal(userClass.n_user[0], userClass.n_user[1]))
+            dailyUsers = math.ceil(np.random.normal(userClass.n_user[0], userClass.n_user[1]))
+            totalUsersInRound += dailyUsers
             userClass.generateNewAlphas()
-            for i in range(0,dailyUser):
+            for i in range(0,dailyUsers):
                 episodes.append(userClass.generateEpisode())
-        return episodes
+        return {"episodes": episodes, "roundUsers": totalUsersInRound}

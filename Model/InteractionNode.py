@@ -19,8 +19,8 @@ class InteractionNode:
         - following: list of the previous interaction nodes;
         - firstSlot: id of the secondary product in slot 1;
         - secondSlot: id of the secondary product in slot 2;
-        - sec1Bought: equals to '1' if the secondary product in slot 1 has been bought, '0' otherwise;
-        - sec2Bought: equals to '1' if the secondary product in slot 2 has been bought, '0' otherwise;
+        - sec1Opened: equals to '1' if the secondary product in slot 1 has been opened, '0' otherwise;
+        - sec2Opened: equals to '1' if the secondary product in slot 2 has been opened, '0' otherwise;
         """
         self.product = product
         self.price = price
@@ -78,12 +78,12 @@ class InteractionNode:
                                                                                self.product, self.price, boughtYN,
                                                                                self.units).ljust(boxWidth, fillChar),
               "{}┃".format(CLIcolors.bcolors.STD))
-        print('{}  ┃{}   ■ FirstSlot={}, Bought={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.firstSlot,
-                                                           self.sec1Bought, CLIcolors.bcolors.STD).ljust(boxWidth,
+        print('{}  ┃{}   ■ FirstSlot={}, Opened={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.firstSlot,
+                                                           self.sec1Opened, CLIcolors.bcolors.STD).ljust(boxWidth,
                                                                                                          fillChar),
               '{}┃'.format(CLIcolors.bcolors.STD))
-        print('{}  ┃{}   ■ SecondSlot={}, Bought={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.secondSlot,
-                                                            self.sec2Bought, CLIcolors.bcolors.STD).ljust(boxWidth,
+        print('{}  ┃{}   ■ SecondSlot={}, Opened={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.secondSlot,
+                                                            self.sec2Opened, CLIcolors.bcolors.STD).ljust(boxWidth,
                                                                                                           fillChar),
               '{}┃'.format(CLIcolors.bcolors.STD))
         print("{}  ┗━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛".format(levelFormat))
