@@ -3,6 +3,7 @@ from Model.UserClass import *
 from Model.Product import *
 from Model.constants import *
 from Model.GraphProbabilities import *
+from Model.Evaluator.GraphEvaluator import *
 
 from Learner.GreedyLearner import *
 from Learner.TS_CR import *
@@ -26,23 +27,23 @@ def totalMarginPerNode(envReturn, marginsPerPrice, pulledArm):
 
 
 def testTS_CR():
-    margins = [[1, 2, 10, 16],
-               [10, 20, 35, 40],
-               [12, 15, 18, 21],
-               [3, 8, 15, 21],
-               [8, 10, 17, 26]]
-    conv_rates = [[0.7, 0.7, 0.4, 0.2],
-                  [0.9, 0.8, 0.6, 0.2],
-                  [0.9, 0.7, 0.5, 0.3],
-                  [0.8, 0.7, 0.4, 0.3],
-                  [0.9, 0.65, 0.45, 0.2]]
+    f = open('Configs/config1.json')
+    config = json.load(f)
+    margins = config["margins"]
+    user_config = config["classes"][0]
+    conv_rates = user_config["conversionRates"]
+    alphas = user_config["alphas"]
+    click_prob = user_config["clickProbability"]
+    secondary_prod = [Product(int(key), user_config["secondary"][key]) for key in user_config["secondary"]]
+    l = user_config["lambda"]
 
     for i in range(0, 5):
         print('{} - {} - {} - {}'.format(margins[i][0] * conv_rates[i][0], margins[i][1] * conv_rates[i][1],
                                          margins[i][2] * conv_rates[i][2], margins[i][3] * conv_rates[i][3]))
 
     print('\n')
-    tsLearner = TS_CR(margins=margins)
+
+    tsLearner = TS_CR(margins=margins, alphas=alphas, secondary_prod=secondary_prod, click_prob=click_prob, l=l)
     n_experiments = 100
     environment = Environment(config_path="Configs/config1.json")
 
@@ -54,7 +55,40 @@ def testTS_CR():
 
     print("Pulled arm {} at time {}:".format(pulledArm, i))
     print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
-    return;
+
+    print(tsLearner.estimated_conversion_rates)
+
+    """
+    SECONDARY_PRODUCTS = {"0": [1, 2], "1": [2, 4], "2": [3, 4], "3": [4, 0], "4": [1, 3]}
+    productList = [Product(int(key), SECONDARY_PRODUCTS[key]) for key in SECONDARY_PRODUCTS]
+    L = 0.7
+    CLICK_PROB = [[0, 0.5, 0.6, 0, 0],
+                  [0, 0, 0.4, 0, 0.2],
+                  [0, 0, 0, 0.8, 0.7],
+                  [0.6, 0, 0, 0, 0.5],
+                  [0, 0.9, 0, 0.3, 0]
+                  ]
+    alphas = [0.3, 0.25, 0.15, 0.15, 0.15]
+    units_mean = [0.75, 1.25, 1.6, 2.1, 0.94]
+
+    conv_rates = [[0.7, 0.7, 0.4, 0.2, 0.1],
+                  [0.9, 0.8, 0.6, 0.2, 0.1],
+                  [0.9, 0.7, 0.5, 0.3, 0.1],
+                  [0.8, 0.7, 0.4, 0.3, 0.1],
+                  [0.9, 0.65, 0.45, 0.2, 0.1]]
+
+
+    eval = GraphEvaluator(products_list=productList, click_prob_matrix=CLICK_PROB, lambda_prob=L,
+                          conversion_rates=conv_rates,
+                          alphas=alphas, margins=margins, units_mean=units_mean, verbose=False)
+
+    print(eval.computeSingleProduct(0))
+    print(eval.computeSingleProduct(1))
+    print(eval.computeSingleProduct(2))
+    print(eval.computeSingleProduct(3))
+    print(eval.computeSingleProduct(4))
+    #print(eval.computeMargin())
+    """
 
 
 def testUCB_CR():
@@ -148,4 +182,5 @@ def testGreedy():
 
     # print(optimal_arm)
 
-testUCB_CR()
+
+testTS_CR()
