@@ -46,7 +46,7 @@ class InteractionNode:
             if i > 0:
                featuresString = featuresString + ", "
             featuresString = featuresString + self.featuresNames[i] + "=" + str(self.featuresValues[i])
-            
+
         print('\n{}USER INTERACTIONS: {}'.format(CLIcolors.bcolors.HEADER, featuresString))
         leftFiller = self.printNode(0)
         leftFiller = leftFiller + "    "
@@ -95,8 +95,8 @@ class InteractionNode:
         print('{}  ┃{} INTERACTION ENDED {}┃'.format(leftFiller, CLIcolors.bcolors.REDBKGRD, CLIcolors.bcolors.STD))
         print("{}  ┗━━━━━━━━━━━━━━━━━━━┛".format(leftFiller))
 
-    
-    
+
+
     def linearizeVisits(self):
         visits = np.full((self.num_products), 0)
         visits[self.product] = 1
@@ -122,3 +122,13 @@ class InteractionNode:
         for next in self.following:
             uu = np.add(uu,next.linearizeVisits())
         return uu
+
+    def linearizeFollowingVisits(self):
+        clickMatrix = np.zeros((self.num_products, self.num_products))
+        for next in self.following:
+            clickMatrix[self.product][next.getProduct()] = 1
+            clickMatrix = np.add(clickMatrix, next.linearizeFollowingVisits())
+        return clickMatrix
+
+    def getProduct(self):
+        return self.product

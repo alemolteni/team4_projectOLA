@@ -2,16 +2,17 @@ import numpy as np
 import math
 
 
-class UCB:
+class UCB: #This class is no more needed
 
-    def __init__(self, num_products=5, num_prices=4, debug=False, margins=np.ones((5, 4))):
+    def __init__(self, num_products=5, num_prices=4, debug=False, margins=np.ones((5, 4)),
+                 conversion_rates=np.zeros((5, 4))):
         self.configuration = [0 for i in range(0,num_products)] 
         self.t = 0
         self.debug = debug
         self.num_products = num_products
         self.num_prices = num_prices
         # Incremental average m(n+1) = m(n) + (new_val - m(n)) / n+1
-        self.conversion_rates = np.full((num_products, num_prices), 0.0)
+        self.conversion_rates = conversion_rates
         self.times_arms_pulled = np.full((num_products, num_prices), 0.0)
         self.expected_reward = np.full((self.num_products, self.num_prices), 0.0)
         self.margins = margins
@@ -46,6 +47,7 @@ class UCB:
         for inter in interactions["episodes"]:
             visits = np.add(visits, inter.linearizeVisits())
             bought = np.add(bought, inter.linearizeBought())
+
         episode_conv_rates = np.divide(bought, visits, out=np.full_like(bought, 0, dtype=float), where=visits!=0)
         #print(episode_conv_rates)
         for i in range(0, len(self.configuration)):
