@@ -3,79 +3,189 @@ from Model.UserClass import *
 from Model.Product import *
 from Model.constants import *
 from Model.GraphProbabilities import *
+from Model.Evaluator.GraphEvaluator import *
 
 from Learner.GreedyLearner import *
+from Learner.TS_CR import *
+from Learner.TS_GW import *
+from Learner.UCB_CR import *
+from Learner.BruteForce import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def totalMarginPerNode(envReturn, marginsPerPrice, pulledArm):
     TotMargin = 0
 
     for e in envReturn:
-        #print("Product: ", e.product,
-         #     "Price: ", pulledArm[e.product],
-          #    "Units: ", e.units,
-           #   "Margin: ", marginsPerPrice[e.product][pulledArm[e.product]] * e.units)
+        # print("Product: ", e.product,
+        #     "Price: ", pulledArm[e.product],
+        #    "Units: ", e.units,
+        #   "Margin: ", marginsPerPrice[e.product][pulledArm[e.product]] * e.units)
         if e.bought:
             TotMargin += marginsPerPrice[e.product][pulledArm[e.product]] * e.units
     return TotMargin
 
 
-conversionRate = [
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4],
-            [1, 0.8, 0.6, 0.4]
-        ]
+def testTS_CR():
+    f = open('Configs/config1.json')
+    config = json.load(f)
+    margins = config["margins"]
+    user_config = config["classes"][0]
+    conv_rates = user_config["conversionRates"]
+    alphas = user_config["alphas"]
+    click_prob = user_config["clickProbability"]
+    secondary_prod = [Product(int(key), user_config["secondary"][key]) for key in user_config["secondary"]]
+    l = user_config["lambda"]
 
-clickProbability = GraphProbabilities(PROBABILITY_MATRIX)
-alphas = [0.2, 0.2, 0.2, 0.2, 0.2]
+    for i in range(0, 5):
+        print('{} - {} - {} - {}'.format(margins[i][0] * conv_rates[i][0], margins[i][1] * conv_rates[i][1],
+                                         margins[i][2] * conv_rates[i][2], margins[i][3] * conv_rates[i][3]))
 
-n_bought_gamma_shape = 2
-n_bought_gamma_scale = 0.5
-n_user_mean = 10
-n_user_variance = 1
+    print('\n')
 
-productList = [Product(int(key), SECONDARY_PRODUCTS[key]) for key in SECONDARY_PRODUCTS]
+    tsLearner = TS_CR(margins=margins, alphas=alphas, secondary_prod=secondary_prod, click_prob=click_prob, l=l)
+    n_experiments = 100
+    environment = Environment(config_path="Configs/config1.json")
 
-Lambda = 0.8
+    for i in range(0, n_experiments):
+        pulledArm = tsLearner.pull_arm()
+        environment.setPriceLevels(pulledArm)
+        interactions = environment.round()
+        tsLearner.update(interactions, pulledArm)
 
-userClass = UserClass(conversionRate=conversionRate, clickProbability=clickProbability, debug=False, alphas=alphas,
-                      Lambda=Lambda, n_user_mean=n_user_mean, n_user_variance=n_user_variance, productList=productList,
-                      units_gamma_shape = n_bought_gamma_shape, units_gamma_scale = n_bought_gamma_scale,
-                      features_generator=[{"name": "Over 18", "probability": 0.6},
-                                          {"name": "Male", "probability": 0.9}])
-environment = Environment([userClass])
+    print("Pulled arm {} at time {}:".format(pulledArm, i))
+    print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
 
-gLearner = GreedyLearner(debug=True)
+    print(tsLearner.estimated_conversion_rates)
 
-marginsPerPrice = [[1, 10, 1, 1],  # Product 1
-                   [1, -1, 0, 0],  # Product 2
-                   [1, 10, 1, 1],  # Product 3
-                   [1, 10, 50, 1],  # Product 4
-                   [1, 10, 100, 1]  # Product 5
-                   ]
+def testTS_GW():
+    f = open('Configs/config1.json')
+    config = json.load(f)
+    margins = config["margins"]
+    user_config = config["classes"][0]
+    conv_rates = user_config["conversionRates"]
+    alphas = user_config["alphas"]
+    click_prob = user_config["clickProbability"]
+    secondary_prod = [Product(int(key), user_config["secondary"][key]) for key in user_config["secondary"]]
+    l = user_config["lambda"]
 
-n_experiments = 100
-optimal_arm = []
+    """
+    for i in range(0, 5):
+        print('{} - {} - {} - {}'.format(margins[i][0] * conv_rates[i][0], margins[i][1] * conv_rates[i][1],
+                                         margins[i][2] * conv_rates[i][2], margins[i][3] * conv_rates[i][3]))
+                                         """
 
-for i in range(0, 100):
-    pulledArm = gLearner.pull_arm()
-    print(pulledArm)
-    environment.setPriceLevels(pulledArm)
-    envReturn = environment.round()
+    print('\n')
 
-    price_configuration_margin = 0
-    for j in range(0, n_experiments):
-        price_configuration_margin += totalMarginPerNode(envReturn, marginsPerPrice, pulledArm)
+    tsLearner = TS_GW(margins=margins, alphas=alphas, secondary_prod=secondary_prod, conversion_rates=conv_rates, l=l)
+    n_experiments = 100
+    environment = Environment(config_path="Configs/config1.json")
+
+    print(tsLearner.estimated_click_prob)
+
+    for i in range(0, n_experiments):
+        pulledArm = tsLearner.pull_arm()
+        environment.setPriceLevels(pulledArm)
+        interactions = environment.round()
+        tsLearner.update(interactions, pulledArm)
+
+    print("Pulled arm {} at time {}:".format(pulledArm, i))
+    print("Optimal configuration in theory: [2, 2, 0, 3, 2]")
+
+    print(tsLearner.estimated_click_prob)
+
+
+def testUCB_CR():
+    env = Environment(config_path="Configs/config1.json")
+    margins = [
+        [1, 2, 10, 16],
+        [10, 20, 35, 40],
+        [12, 15, 18, 21],
+        [3, 8, 15, 21],
+        [8, 10, 17, 26]
+    ]
+    conv_rates = [[0.7, 0.7, 0.4, 0.2],
+                  [0.9, 0.8, 0.6, 0.2],
+                  [0.9, 0.7, 0.5, 0.3],
+                  [0.8, 0.7, 0.4, 0.3],
+                  [0.9, 0.65, 0.45, 0.2]]
+
+    clickProb = [
+      [0, 0.5, 0.6, 0, 0],
+      [0, 0, 0.4, 0, 0.2],
+      [0, 0, 0, 0.8, 0.7],
+      [0.6, 0, 0, 0, 0.5],
+      [0, 0.9, 0, 0.3, 0]
+    ]
+
+    alphas = [0.3, 0.25, 0.15, 0.15, 0.15]
+
+    secondary = {0: [1, 2], 1: [2, 4], 2: [3, 4], 3: [4, 0], 4: [1, 3]} #Changed secondary sintax to avoid strings
+
+    learner = UCB_CR(margins=margins, clickProbability=clickProb, alphas=alphas, secondary=secondary, Lambda=0.7, debug=True)
+    #learner = UCB(margins=margins)
+    n_experiments = 100
+
+    for t in range(1, n_experiments):
+        conf = learner.pull_arm()
+        print(conf)
+        env.setPriceLevels(conf)
+        rew = env.round()
+        learner.update(rew)
+
+    print("Pulled arm {} at time {}:".format(conf, t))
+
+    return
+
+
+def testGreedy():
+    environment = Environment(config_path="Configs/config1.json")
+    gLearner = GreedyLearner(debug=True)
+
+    marginsPerPrice = [
+        [1, 2, 10, 16],
+        [10, 20, 35, 40],
+        [12, 15, 18, 21],
+        [3, 8, 15, 21],
+        [8, 10, 17, 26]
+    ]
+
+    n_experiments = 100
+
+    optimal_arm = []
+
+    allMargin = np.array([])
+
+    for i in range(0, 1030):
+        pulledArm = gLearner.pull_arm()
+        print(pulledArm)
+        environment.setPriceLevels(pulledArm)
         envReturn = environment.round()
 
-    margin = price_configuration_margin / n_experiments
-    gLearner.update(margin)
+        price_configuration_margin = 0
+        for j in range(0, n_experiments):
+            price_configuration_margin += totalMarginPerNode(envReturn, marginsPerPrice, pulledArm)
+            envReturn = environment.round()
 
-    #if np.array_equal(optimal_arm, pulledArm):
-       #break
+        margin = price_configuration_margin / n_experiments
+        print(margin)
+        allMargin = np.append(allMargin, margin)
+        gLearner.update(margin)
 
-    #optimal_arm = pulledArm
+    print("Optima", gLearner.get_optima())
+    print("Optima margin", gLearner.get_optima_margin())
+    x = np.linspace(0, 1030, 1030)
 
-#print(optimal_arm)
+    fig, ax = plt.subplots()
+    ax.plot(x, allMargin)
+    plt.show()
+    # if np.array_equal(optimal_arm, pulledArm):
+    # break
+
+    # optimal_arm = pulledArm
+
+    # print(optimal_arm)
+
+
+testTS_GW()

@@ -3,7 +3,7 @@ import numpy as np
 
 class BruteForce:
 
-    def __init__(self, num_products=5, num_prices=5, debug=False):
+    def __init__(self, num_products=5, num_prices=4, debug=False):
         self.current_config = [0 for i in range(0,num_products)]
         self.t = -1  # per provare la configurazione tutti 0
         self.optimal_configuration = [0, 0, 0, 0, 0]  # configurazione di prezzo ottimale
@@ -42,3 +42,6 @@ class BruteForce:
 
     def get_optima(self):
         return self.optimal_configuration
+
+    def get_optima_margin(self):
+        return self.optimal_configuration_margin

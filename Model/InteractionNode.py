@@ -19,8 +19,8 @@ class InteractionNode:
         - following: list of the previous interaction nodes;
         - firstSlot: id of the secondary product in slot 1;
         - secondSlot: id of the secondary product in slot 2;
-        - sec1Bought: equals to '1' if the secondary product in slot 1 has been bought, '0' otherwise;
-        - sec2Bought: equals to '1' if the secondary product in slot 2 has been bought, '0' otherwise;
+        - sec1Opened: equals to '1' if the secondary product in slot 1 has been opened, '0' otherwise;
+        - sec2Opened: equals to '1' if the secondary product in slot 2 has been opened, '0' otherwise;
         """
         self.product = product
         self.price = price
@@ -46,7 +46,7 @@ class InteractionNode:
             if i > 0:
                featuresString = featuresString + ", "
             featuresString = featuresString + self.featuresNames[i] + "=" + str(self.featuresValues[i])
-            
+
         print('\n{}USER INTERACTIONS: {}'.format(CLIcolors.bcolors.HEADER, featuresString))
         leftFiller = self.printNode(0)
         leftFiller = leftFiller + "    "
@@ -78,12 +78,12 @@ class InteractionNode:
                                                                                self.product, self.price, boughtYN,
                                                                                self.units).ljust(boxWidth, fillChar),
               "{}┃".format(CLIcolors.bcolors.STD))
-        print('{}  ┃{}   ■ FirstSlot={}, Bought={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.firstSlot,
-                                                           self.sec1Bought, CLIcolors.bcolors.STD).ljust(boxWidth,
+        print('{}  ┃{}   ■ FirstSlot={}, Opened={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.firstSlot,
+                                                           self.sec1Opened, CLIcolors.bcolors.STD).ljust(boxWidth,
                                                                                                          fillChar),
               '{}┃'.format(CLIcolors.bcolors.STD))
-        print('{}  ┃{}   ■ SecondSlot={}, Bought={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.secondSlot,
-                                                            self.sec2Bought, CLIcolors.bcolors.STD).ljust(boxWidth,
+        print('{}  ┃{}   ■ SecondSlot={}, Opened={}'.format(levelFormat, CLIcolors.bcolors.BKGRD, self.secondSlot,
+                                                            self.sec2Opened, CLIcolors.bcolors.STD).ljust(boxWidth,
                                                                                                           fillChar),
               '{}┃'.format(CLIcolors.bcolors.STD))
         print("{}  ┗━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛".format(levelFormat))
@@ -95,8 +95,8 @@ class InteractionNode:
         print('{}  ┃{} INTERACTION ENDED {}┃'.format(leftFiller, CLIcolors.bcolors.REDBKGRD, CLIcolors.bcolors.STD))
         print("{}  ┗━━━━━━━━━━━━━━━━━━━┛".format(leftFiller))
 
-    
-    
+
+
     def linearizeVisits(self):
         visits = np.full((self.num_products), 0)
         visits[self.product] = 1
@@ -122,3 +122,13 @@ class InteractionNode:
         for next in self.following:
             uu = np.add(uu,next.linearizeVisits())
         return uu
+
+    def linearizeFollowingVisits(self):
+        clickMatrix = np.zeros((self.num_products, self.num_products))
+        for next in self.following:
+            clickMatrix[self.product][next.getProduct()] = 1
+            clickMatrix = np.add(clickMatrix, next.linearizeFollowingVisits())
+        return clickMatrix
+
+    def getProduct(self):
+        return self.product
