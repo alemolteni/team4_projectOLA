@@ -123,11 +123,26 @@ class InteractionNode:
             uu = np.add(uu,next.linearizeVisits())
         return uu
 
-    def linearizeFollowingVisits(self):
-        clickMatrix = np.zeros((self.num_products, self.num_products))
-        for next in self.following:
-            clickMatrix[self.product][next.getProduct()] = 1
-            clickMatrix = np.add(clickMatrix, next.linearizeFollowingVisits())
+    def linearizeFollowingVisits(self):  # Written for step 5, now not in use
+        clickMatrix = np.zeros((self.num_products, 4))
+        # [j][0] = 1 if clicked only first
+        # [j][1] = 1 if clicked only second
+        # [j][2] = 1 if clicked both
+        # [j][3] = 1 if clicked none but bought
+        if self.bought == 1:
+            if len(self.following) == 0:
+                clickMatrix[self.product][3] = 1
+            elif self.sec1Opened == 1 and self.sec2Opened == 1:
+                clickMatrix[self.product][2] = 1
+                clickMatrix = np.add(clickMatrix, self.following[0].linearizeFollowingVisits())
+                clickMatrix = np.add(clickMatrix, self.following[1].linearizeFollowingVisits())
+            elif self.sec1Opened == 1:
+                clickMatrix[self.product][0] = 1
+                clickMatrix = np.add(clickMatrix, self.following[0].linearizeFollowingVisits())
+            elif self.sec2Opened == 1:
+                clickMatrix[self.product][1] = 1
+                clickMatrix = np.add(clickMatrix, self.following[0].linearizeFollowingVisits())
+
         return clickMatrix
 
     def getProduct(self):
