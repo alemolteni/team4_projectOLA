@@ -5,7 +5,7 @@ from Learner.TS import *
 
 class TS_CR(TS):
 
-    def __init__(self, num_products=5, num_prices=4, margins=np.ones((5, 4)), alphas=np.ones(5), secondary_prod=[],
+    def __init__(self, num_products=5, num_prices=4, margins=np.ones((5, 4)), alphas=np.ones(6), secondary_prod=[],
                  click_prob=np.ones((5, 5)), l=0.5, debug=False):
         super(TS_CR, self).__init__(num_products=num_products, num_prices=num_prices)
         self.margins = margins
