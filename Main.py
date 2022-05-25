@@ -277,7 +277,7 @@ def load_mean_config(file_path):
 
     def total_margin_per_node(envReturn, marginsPerPrice, pulledArm):
         TotMargin = 0
-        for e in envReturn["episodes"]:
+        for e in envReturn:
             if e.bought:
                 TotMargin += marginsPerPrice[e.product][pulledArm[e.product]] * e.units
         return TotMargin

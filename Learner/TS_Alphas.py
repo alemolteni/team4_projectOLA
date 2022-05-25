@@ -17,7 +17,7 @@ class TS_Alphas(TS_CR):
         # From daily interactions extract needed information, depending on step uncertainty:
         #   - Step 4: update conversion rates, 𝛼 ratios, #units sold per product
 
-        for i in interactions["episodes"]:
+        for i in interactions:
             if i.bought:
                 reward = 1.0
             else:
