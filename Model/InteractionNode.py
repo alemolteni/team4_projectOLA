@@ -123,6 +123,12 @@ class InteractionNode:
             uu = np.add(uu,next.linearizeVisits())
         return uu
 
+    def linearizeMargin(self, marginPerPrice):
+        margin = self.bought * self.units * marginPerPrice[self.product][self.price]
+        for foll in self.following:
+            margin += foll.linearizeMargin(marginPerPrice)
+        return margin
+
     def linearizeFollowingVisits(self):  # Written for step 5, now not in use
         clickMatrix = np.zeros((self.num_products, 4))
         # [j][0] = 1 if clicked only first

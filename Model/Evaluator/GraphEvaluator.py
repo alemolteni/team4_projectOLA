@@ -68,6 +68,7 @@ class GraphEvaluator(Evaluator):
         single_margins = np.full((len(self.products_list)), 0)
         for i in range(0,len(self.products_list)):
             visiting_prob = self.computeSingleProduct(i)
+            assert (visiting_prob <= np.full(len(visiting_prob),1)).all()
             # Margin if alpha = [1 0 0 0 0]
             single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,self.units_mean),self.conversion_rates)).sum()
             #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
