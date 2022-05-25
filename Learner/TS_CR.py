@@ -54,7 +54,7 @@ class TS_CR(TS):
         #   - Step 4: update conversion rates, 𝛼 ratios, #units sold per product
         #   - Step 5: update conversion rates, 𝛼 ratios, #units sold per product, graph weights
 
-        for i in interactions["episodes"]:
+        for i in interactions:
             if i.bought:
                 reward = 1.0
             else:

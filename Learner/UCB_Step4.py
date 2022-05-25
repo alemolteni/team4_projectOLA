@@ -19,7 +19,7 @@ class UCB_Step4(UCB_CR):
         bought = np.full(self.num_products, 0)
         started = np.full(self.num_products, 0)
 
-        for inter in interactions["episodes"]:
+        for inter in interactions:
             visits = np.add(visits, inter.linearizeVisits())
             bought = np.add(bought, inter.linearizeBought())
             started = np.add(started, inter.linearizeStart())

@@ -65,11 +65,9 @@ class Environment:
             func(self.t, self)
 
         episodes = []
-        totalUsersInRound = 0
         for userClass in self.classes:
             dailyUsers = math.ceil(np.random.normal(userClass.n_user[0], userClass.n_user[1]))
-            totalUsersInRound += dailyUsers
             userClass.generateNewAlphas()
             for i in range(0,dailyUsers):
                 episodes.append(userClass.generateEpisode())
-        return {"episodes": episodes, "roundUsers": totalUsersInRound}
+        return  episodes

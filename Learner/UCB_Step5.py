@@ -21,7 +21,7 @@ class UCB_Step5(UCB_CR):
         tot = np.zeros(self.num_products)
 
         single_interactions_list = []
-        for i in interactions["episodes"]:
+        for i in interactions:
             single_interactions_list.append(i)
 
         while len(single_interactions_list) > 0:

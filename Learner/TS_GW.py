@@ -53,7 +53,7 @@ class TS_GW(TS):
         #   - Step 5: update graph weights
 
         single_interactions_list = []
-        for i in interactions["episodes"]:
+        for i in interactions:
             single_interactions_list.append(i)
 
         while len(single_interactions_list) != 0:

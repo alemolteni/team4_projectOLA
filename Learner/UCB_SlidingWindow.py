@@ -49,7 +49,7 @@ class UCB_SlidingWindow(UCB_CR):
         visits = np.full(self.num_products, 0)
         bought = np.full(self.num_products, 0)
 
-        for inter in interactions["episodes"]:
+        for inter in interactions:
             visits = np.add(visits, inter.linearizeVisits())
             bought = np.add(bought, inter.linearizeBought())
 
