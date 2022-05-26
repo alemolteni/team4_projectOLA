@@ -31,16 +31,19 @@ class GraphEvaluator(Evaluator):
 
         y_matrix = w_matrix.multiplyElementWise(lambda_matrix)
         self.y_matrix = y_matrix.multiplyElementWise(conversion_matrix)
+
         #if verbose: print(self.y_matrix.weightMatrix)
 
     def computeSingleProduct(self, product):
-        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix)
+        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=False)
         nodes=[firstNode]
-        inverse_prob = np.full((len(self.products_list)), 1)
+        joint_prob = np.full((len(self.products_list)), 0).tolist()
+        joint_prob[product] = 1
         # Iterate for #steps times
         for i in range(0, len(self.products_list)-1):
             # Next nodes
             product_nodes = np.full((len(self.products_list)), None)
+            # if self.verbose: print("Nodes to be expanded: {}".format(len(nodes)))
             for k in range(0,len(nodes)):
                 node = nodes[k]
                 following = node.expand()
@@ -54,23 +57,26 @@ class GraphEvaluator(Evaluator):
             # Remove None elements
             existing_nodes = product_nodes[product_nodes != np.array(None)]
             reached_nodes = ""
+            # if self.verbose: print("Nodes reached from previous step: {} total {}".format(product_nodes, len(existing_nodes)))
             for k in range(0,len(existing_nodes)):
                 index = existing_nodes[k].product
                 reached_nodes = reached_nodes + str(index) + "; "
                 # existing_nodes[k].computeProbability() is the probability of visiting "index" in (i+1)-steps
-                inverse_prob[index] = inverse_prob[index] * (1 - existing_nodes[k].computeProbability())
-            #if self.verbose: print("Reached nodes in {}-step: {}".format(i+1,reached_nodes))
+                reaching_probability = existing_nodes[k].computeProbability()
+                joint_prob[index] += reaching_probability
+            if self.verbose: print("Probability of visiting nodes in at most {}-step from {}: {}".format(i+1, product, joint_prob))
             nodes = existing_nodes
         # Probability of visiting product
-        return  1 - inverse_prob 
+        return  np.array(joint_prob)
 
     def computeMargin(self):
         single_margins = np.full((len(self.products_list)), 0)
         for i in range(0,len(self.products_list)):
             visiting_prob = self.computeSingleProduct(i)
+            if self.verbose: print("Visiting probability from product {}: {}".format(i, visiting_prob))
             assert (visiting_prob <= np.full(len(visiting_prob),1)).all()
             # Margin if alpha = [1 0 0 0 0]
-            single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,self.units_mean),self.conversion_rates)).sum()
+            single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,np.ceil(self.units_mean)),self.conversion_rates)).sum()
             #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
         # Weight the single margin by alpha
         return np.multiply(single_margins, self.alphas).sum()

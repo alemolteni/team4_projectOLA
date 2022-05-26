@@ -119,12 +119,14 @@ class InteractionNode:
     def linearizeNumUnits(self):
         uu = np.full((self.num_products), 0)
         uu[self.product] = self.units
+        # print("Current LIN#UNITS: {}".format(uu))
         for next in self.following:
-            uu = np.add(uu,next.linearizeVisits())
+            uu = np.add(uu,next.linearizeNumUnits())
         return uu
 
     def linearizeMargin(self, marginPerPrice):
         margin = self.bought * self.units * marginPerPrice[self.product][self.price]
+        # print("Margin product {} level {} is {} (Bought={}, #Units={}, MPP={})".format(self.product,self.price,margin,self.bought,self.units,marginPerPrice[self.product][self.price]))
         for foll in self.following:
             margin += foll.linearizeMargin(marginPerPrice)
         return margin

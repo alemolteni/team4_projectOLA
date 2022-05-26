@@ -21,15 +21,15 @@ class StepNode:
         for i in range(0,len(self.feasible_paths)):
             path = self.feasible_paths[i]
             prob = 1
-            if self.verbose: print("Path indexes for product {} : {}".format(self.product, path))
             for k in range(0,len(path)-1):
                 prob = prob * self.graph_prob.getEdgeProbability(path[k],path[k+1])
+
+            if self.verbose: print("Path indexes for product {}: {} with probability {}".format(self.product, path, prob))
             paths_prob.append(prob)
         # Merge all paths prob by using OR, P(path1 OR path2) = 1 - (1 - P(path1)) * (1 - P(path2))
-        inverse_prob = 1
-        for i in range(0,len(paths_prob)):
-            inverse_prob = inverse_prob * (1 - paths_prob[i])
-        return 1 - inverse_prob
+        # UPDATED: Actually no bc P(path1 OR path2) = P(path1) + P(path2) - P(path1 AND path2) = P(path1) + P(path2)
+        # by problem construction, in each interaction we can reach a product in a single way (can open a product once)
+        return np.array(paths_prob).sum()
 
     def merge(self, node):
         if self.product != node.product:
@@ -43,7 +43,7 @@ class StepNode:
         next_nodes = []
         for i in range(0,n_products):
             if self.graph_prob.getEdgeProbability(self.product,i) > 0 :
-                next_nodes.append(StepNode(i,paths=self.feasible_paths,graph_prob=self.graph_prob))
+                next_nodes.append(StepNode(i,paths=self.feasible_paths,graph_prob=self.graph_prob,verbose=self.verbose))
         return next_nodes
     
     def isFeasible(self):
