@@ -132,7 +132,8 @@ class UserClass:
         return userInteractions
 
     def generateNewAlphas(self):
-        self.product_alphas_intervals = np.cumsum(np.random.dirichlet(self.alphas))
+        alph = np.array(self.alphas) * 20
+        self.product_alphas_intervals = np.cumsum(np.random.dirichlet(alph))
         return 
 
     def setCurrentPrice(self, currentPrice):
