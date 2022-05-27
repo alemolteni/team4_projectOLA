@@ -90,4 +90,5 @@ class UCB_SlidingWindow(UCB_CR):
 
             self.conversion_rates = temp_conversion_rates.copy()
 
-        print("Conversion rates: ", self.conversion_rates)
+        if self.debug:
+            print("Conversion rates: ", self.conversion_rates)
