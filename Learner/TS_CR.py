@@ -1,12 +1,13 @@
 import numpy as np
 import math
 from Learner.TS import *
+from Model.Evaluator.GraphEvaluator import *
 
 
 class TS_CR(TS):
 
     def __init__(self, num_products=5, num_prices=4, margins=np.ones((5, 4)), alphas=np.ones(5), secondary_prod=[],
-                 click_prob=np.ones((5, 5)), l=0.5, debug=False):
+                 click_prob=np.ones((5, 5)), l=0.5, units_mean=[], debug=False):
         super(TS_CR, self).__init__(num_products=num_products, num_prices=num_prices)
         self.margins = margins
         self.alphas = alphas
@@ -15,9 +16,8 @@ class TS_CR(TS):
         self.click_prob = click_prob
         self.l = l
         self.last_pulled_config = [0, 0, 0, 0, 0]
-        self.secondary_prod = []
-        for p in secondary_prod:
-            self.secondary_prod.append([p.getSecondaryProduct(0), p.getSecondaryProduct(1)])
+        self.product_list = secondary_prod
+        self.units_mean = units_mean
 
         self.update_conversion_rates()
         # Take as input also alphas or other information known needed for computing expected rewards
@@ -39,6 +39,7 @@ class TS_CR(TS):
     def compute_expected_rewards(self):
         # It should return a matrix #PROD x #LEVELS in which the elements are the computed rewards
         # Then pull arm will use this to choose the arm with the max expected reward as next
+
         exp_rewards = np.zeros((self.num_products, self.num_prices))
         for i in range(0, self.num_products):
             for j in range(0, self.num_prices):
@@ -74,33 +75,21 @@ class TS_CR(TS):
                         self.beta_parameters[i, j, 0] + self.beta_parameters[i, j, 1])
 
     def compute_product_prob(self, prod, test_config):
+        armMargins = []
+        armConvRates = []
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(self.estimated_conversion_rates[k][test_config[k]])
+
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False)
+        product_prob = graphEval.computeSingleProduct(prod)
+
         probability = self.alphas[prod]
         for i in range(0, self.num_products):
             if i != prod:
-                probability += self.alphas[i] * self.estimated_conversion_rates[i, test_config[i]] * self.compute_prob_from_a_to_b(i, prod, test_config)
+                probability += self.alphas[i] * self.estimated_conversion_rates[i, test_config[i]] * product_prob[i]
 
         return probability
-
-    def compute_prob_from_a_to_b(self, a, b, test_config, trace=[]):
-        if a == b: return 1
-
-        trace.append(a)
-        # print(trace)
-
-        prob = 0
-        prob2 = 0
-
-        if self.secondary_prod[a][0] not in trace:
-            prob = self.click_prob[a][self.secondary_prod[a][0]] * \
-                   self.compute_prob_from_a_to_b(self.secondary_prod[a][0], b, test_config, trace) * \
-                   self.estimated_conversion_rates[a, test_config[a]]
-            # print("Prob1: ", prob)
-
-        if self.secondary_prod[a][1] not in trace:
-            prob2 = self.click_prob[a][self.secondary_prod[a][1]] * self.l * \
-                    self.compute_prob_from_a_to_b(self.secondary_prod[a][1], b, test_config, trace) * \
-                    self.estimated_conversion_rates[a, test_config[a]]
-            # print("Prob2: ", prob2)
-
-        trace.pop()
-        return prob + prob2

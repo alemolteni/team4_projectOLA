@@ -1,12 +1,13 @@
 import numpy as np
 import math
 from Learner.TS import *
+from Model.Evaluator.GraphEvaluator import *
 
 
 class TS_GW(TS):
 
     def __init__(self, num_products=5, num_prices=4, margins=np.ones((5, 4)), alphas=np.ones(6), secondary_prod=[],
-                 conversion_rates=np.ones((5, 4)), l=0.5, debug=False):
+                 conversion_rates=np.ones((5, 4)), l=0.5, units_mean=[], debug=False):
         super(TS_GW, self).__init__(num_products=num_products, num_prices=num_prices)
         self.margins = margins
         self.alphas = alphas
@@ -15,9 +16,8 @@ class TS_GW(TS):
         self.conversion_rates = conversion_rates
         self.l = l
         self.last_pulled_config = [0, 0, 0, 0, 0]
-        self.secondary_prod = []
-        for p in secondary_prod:
-            self.secondary_prod.append([p.getSecondaryProduct(0), p.getSecondaryProduct(1)])
+        self.product_list = secondary_prod
+        self.units_mean = units_mean
 
         self.update_click_prob(init=True)
         # Take as input also alphas or other information known needed for computing expected rewards
@@ -91,43 +91,31 @@ class TS_GW(TS):
     def update_click_prob(self, init=False):
         for i in range(0, self.num_products):
             for j in range(0, self.num_products):
-                if init and (self.secondary_prod[i][0] == j or self.secondary_prod[i][1] == j):
+                if init and (self.product_list[i].getSecondaryProduct(0) == j or self.product_list[i].getSecondaryProduct(1) == j):
                     self.estimated_click_prob[i, j] = 0.5
-                elif self.secondary_prod[i][0] == j or self.secondary_prod[i][1] == j:  # if is a secondary product
+                elif self.product_list[i].getSecondaryProduct(0) == j or self.product_list[i].getSecondaryProduct(1) == j:  # if is a secondary product
                     self.estimated_click_prob[i, j] = self.beta_parameters[i, j, 0] / (
                             self.beta_parameters[i, j, 0] + self.beta_parameters[i, j, 1])
-                    if self.secondary_prod[i][1] == j:  # if is the second secondary product
+                    if self.product_list[i].getSecondaryProduct(1) == j:  # if is the second secondary product
                         self.estimated_click_prob[i, j] = self.estimated_click_prob[i, j] / self.l
 
     def compute_product_prob(self, prod, test_config):
+        armMargins = []
+        armConvRates = []
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(self.conversion_rates[k][test_config[k]])
+
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.estimated_click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False)
+        product_prob = graphEval.computeSingleProduct(prod)
+
         probability = self.alphas[prod]
         for i in range(0, self.num_products):
             if i != prod:
                 probability += self.alphas[i] * self.conversion_rates[i][
-                    test_config[i]] * self.compute_prob_from_a_to_b(i, prod, test_config)
+                    test_config[i]] * product_prob[i]
 
         return probability
-
-    def compute_prob_from_a_to_b(self, a, b, test_config, trace=[]):
-        if a == b: return 1
-
-        trace.append(a)
-        # print(trace)
-
-        prob = 0
-        prob2 = 0
-
-        if self.secondary_prod[a][0] not in trace:
-            prob = np.random.beta(self.beta_parameters[a, self.secondary_prod[a][0], 0], self.beta_parameters[a, self.secondary_prod[a][0], 1]) * \
-                   self.compute_prob_from_a_to_b(self.secondary_prod[a][0], b, test_config, trace) * \
-                   self.conversion_rates[a][test_config[a]]
-            # print("Prob1: ", prob)
-
-        if self.secondary_prod[a][1] not in trace:
-            prob2 = np.random.beta(self.beta_parameters[a, self.secondary_prod[a][1], 0], self.beta_parameters[a, self.secondary_prod[a][1], 1]) * \
-                    self.compute_prob_from_a_to_b(self.secondary_prod[a][1], b, test_config, trace) * \
-                    self.conversion_rates[a][test_config[a]]
-            # print("Prob2: ", prob2)
-
-        trace.pop()
-        return prob + prob2
