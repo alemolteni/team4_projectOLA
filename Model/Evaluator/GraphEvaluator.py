@@ -35,7 +35,7 @@ class GraphEvaluator(Evaluator):
         #if verbose: print(self.y_matrix.weightMatrix)
 
     def computeSingleProduct(self, product):
-        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=False)
+        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=self.verbose)
         nodes=[firstNode]
         joint_prob = np.full((len(self.products_list)), 0).tolist()
         joint_prob[product] = 1
@@ -74,7 +74,14 @@ class GraphEvaluator(Evaluator):
         for i in range(0,len(self.products_list)):
             visiting_prob = self.computeSingleProduct(i)
             if self.verbose: print("Visiting probability from product {}: {}".format(i, visiting_prob))
-            assert (visiting_prob <= np.full(len(visiting_prob),1)).all()
+            if (visiting_prob > np.full(len(visiting_prob),1.1)).any() and False:
+                self.verbose = True
+                print("====== ASSERT WARNING ! DEBUG MODE =======")
+                visiting_prob = self.computeSingleProduct(i)
+                print("====== ASSERT WARNING ! DEBUG MODE END =======")
+                self.verbose = False
+            # assert (visiting_prob <= np.full(len(visiting_prob),1.1)).all(), "Probability of visiting greater than one {}, margins {}".format(visiting_prob, self.margins)
+            visiting_prob[visiting_prob > 1] = 1
             # Margin if alpha = [1 0 0 0 0]
             single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,np.ceil(self.units_mean)),self.conversion_rates)).sum()
             #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
