@@ -1,19 +1,26 @@
 import numpy as np
 import math
+from Model.Evaluator.GraphEvaluator import *
 
 
 class UCB_CR():
 
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.zeros(5),
-                 clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, conversion_rates=None):
+                 clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, conversion_rates=None, units_mean=None):
+        if units_mean is None:
+            units_mean = [1, 1, 1, 1, 1]
         if secondary is None:
             secondary = {0: [1, 2], 1: [2, 4], 2: [3, 4], 3: [4, 0],
                          4: [1, 3]}  # Changed secondary syntax to avoid strings
+
         self.alphas = alphas
         self.clickProbability = clickProbability
-        self.secondary = secondary
-        self.Lambda = Lambda
+        self.secondary = []
+        self.productList = secondary
+        for p in secondary:
+            self.secondary.append([p.getSecondaryProduct(0), p.getSecondaryProduct(1)])
 
+        self.Lambda = Lambda
         self.configuration = [0 for i in range(0, num_products)]
         self.t = 0
         self.debug = debug
@@ -27,6 +34,10 @@ class UCB_CR():
         self.times_arms_pulled = np.full((num_products, num_prices), 0.0)
         self.expected_reward = np.full((self.num_products, self.num_prices), 0.0)
         self.margins = margins
+        self.units_mean = units_mean
+
+        self.S = 1
+        self.upper_bound = self.conversion_rates
 
     def pull_arm(self):
         # Choose arm with higher upper confidence bound
@@ -38,12 +49,25 @@ class UCB_CR():
         upper_deviation = np.sqrt(
             np.divide(log_time, n_arms, out=np.full_like(log_time, np.inf, dtype=float), where=n_arms != 0))
 
-        self.expected_reward = self.compute_expected_rewards()
-        if self.debug:
-            print("Reward: ", self.expected_reward)
-        upper_bound = np.add(self.expected_reward, upper_deviation)
+        self.expected_reward = self.compute_expected_rewardsGE()
+        # Scale down the expected reward?
+        # if np.amax(self.expected_reward) > 0:
+        #    self.expected_reward = np.divide(self.expected_reward, np.amax(self.expected_reward))
+        #print("ExpRew", self.expected_reward)
 
-        self.configuration = np.argmax(upper_bound, axis=1)
+        # Scale up the upper_deviation element? For now has better results
+        upper_deviation = np.multiply(upper_deviation, np.amin(self.expected_reward))
+
+        self.upper_bound = np.add(self.expected_reward, upper_deviation)
+        # upper_bound = np.clip(upper_bound, 0, 1)
+        #print("UpperB", self.upper_bound)
+
+        if self.t <= 4:
+            self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
+        else:
+            self.configuration = np.argmax(self.upper_bound, axis=1)
+        if self.debug:
+            print("Config: ", self.configuration)
         for i in range(0, len(self.configuration)):
             self.times_arms_pulled[i][self.configuration[i]] += 1
         return self.configuration
@@ -64,10 +88,41 @@ class UCB_CR():
         for i in range(0, len(self.configuration)):
             # Incremental average m(n+1) = m(n) + (new_val - m(n)) / n+1
             mean = self.conversion_rates[i][self.configuration[i]]
-            self.conversion_rates[i][self.configuration[i]] = (mean + (episode_conv_rates[i] - mean) / self.t)
+            self.conversion_rates[i][self.configuration[i]] = (mean + (episode_conv_rates[i] - mean) /
+                                                               self.times_arms_pulled[i][self.configuration[i]])
         if self.debug:
             print("Conversion rates: ", self.conversion_rates)
         return
+
+    def compute_expected_rewardsGE(self):
+        # Graph evaluator tiene conto del CR nella probabilità di andare da uno all'altro?
+        # Use graph evaluator to compute expected values
+
+        armMargins = []
+        armConvRates = []
+
+        for k in range(0, len(self.configuration)):
+            armMargins.append(self.margins[k][self.configuration[k]])
+            armConvRates.append(self.conversion_rates[k][self.configuration[k]])
+
+        graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
+                                   lambda_prob=self.Lambda,
+                                   alphas=self.alphas, conversion_rates=armConvRates, margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False)
+
+        for i in range(0, len(self.configuration)):
+            visiting_prob = graphEval.computeSingleProduct(i)
+            visiting_prob = np.multiply(visiting_prob, self.alphas).sum()
+
+            self.expected_reward[i][self.configuration[i]] = self.margins[i][self.configuration[i]] * \
+                                                             self.conversion_rates[i][self.configuration[i]] * \
+                                                             self.units_mean[i] * visiting_prob
+
+        # print("Before config value: ", graphEval.computeMargin())
+        return self.expected_reward
+
+
+    # I'm not using methods below this point
 
     def compute_expected_rewards(self):
         # It should return a matrix #PROD x #LEVELS in which the elements are the computed rewards
@@ -79,14 +134,13 @@ class UCB_CR():
             self.expected_reward[i][self.configuration[i]] = self.compute_expected_prod(i)
 
         return self.expected_reward
-
-    def compute_expected_prod(self, prod):  # Should add mean of product sold? - gamma shape is the mean, rate = 1
+    def compute_expected_prod(self, prod):
         par = 0
         for i in range(0, len(self.configuration)):
             par += self.alphas[i] * self.compute_prob_from_a_to_b(i, prod)
 
-        return par * self.margins[prod][self.configuration[prod]] * self.conversion_rates[prod][
-            self.configuration[prod]]
+        return par * self.margins[prod][self.configuration[prod]] * self.conversion_rates[prod][self.configuration[prod]] * \
+               self.units_mean[i]
 
     def compute_prob_from_a_to_b(self, a, b, trace=[]):
         if a == b:
