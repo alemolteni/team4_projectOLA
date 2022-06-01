@@ -83,7 +83,7 @@ class GraphEvaluator(Evaluator):
             # assert (visiting_prob <= np.full(len(visiting_prob),1.1)).all(), "Probability of visiting greater than one {}, margins {}".format(visiting_prob, self.margins)
             visiting_prob[visiting_prob > 1] = 1
             # Margin if alpha = [1 0 0 0 0]
-            single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,np.ceil(self.units_mean)),self.conversion_rates)).sum()
+            single_margins[i] = np.multiply(visiting_prob,np.multiply(np.multiply(self.margins,self.units_mean),self.conversion_rates)).sum()
             #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
         # Weight the single margin by alpha
         return np.multiply(single_margins, self.alphas).sum()

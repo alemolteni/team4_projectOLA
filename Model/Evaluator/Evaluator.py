@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Evaluator:
     def __init__(self, products_list=[], click_prob_matrix=None, lambda_prob=0.5, conversion_rates=[], 
@@ -15,7 +16,12 @@ class Evaluator:
         self.n_products = len(products_list)
         self.alphas = np.array(alphas)
         self.margins = np.array(margins)
-        self.units_mean = np.array(units_mean)
+        actual_means = []
+        # Cannot integrate the gamma function, so empirically compute the ceiled mean
+        for i in range(0,len(units_mean)):
+            empiric_mean = np.ceil(np.random.gamma(units_mean[i], 1, size=1000000)).mean()
+            actual_means.append(int(empiric_mean*100) / 100)
+        self.units_mean = np.array(actual_means)
         self.verbose = verbose
 
     def computeMargin(self):
