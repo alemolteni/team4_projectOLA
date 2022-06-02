@@ -6,9 +6,9 @@ from Model.Evaluator.Evaluator import Evaluator
 
 class GraphEvaluator(Evaluator):
     def __init__(self, products_list=[], click_prob_matrix=None, lambda_prob=0.5, conversion_rates=[], 
-                alphas=[], margins=[], units_mean=[], verbose=False):
+                alphas=[], margins=[], units_mean=None, convert_units=True, verbose=False):
         super(GraphEvaluator, self).__init__(products_list=products_list, click_prob_matrix=click_prob_matrix, lambda_prob=lambda_prob, conversion_rates=conversion_rates, 
-                alphas=alphas, margins=margins, units_mean=units_mean, verbose=verbose)
+                alphas=alphas, margins=margins, units_mean=units_mean, convert_units=convert_units, verbose=verbose)
 
         lambda_mat = np.full((self.n_products,self.n_products), 0, dtype=float)
         for i in range(0,len(products_list)):
