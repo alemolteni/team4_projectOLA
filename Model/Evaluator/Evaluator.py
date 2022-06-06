@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import gamma
 import math
 
 class Evaluator:
@@ -30,8 +31,20 @@ class Evaluator:
         if convert_units:
             actual_means = []
             for i in range(0,len(units_mean)):
-                empiric_mean = np.ceil(np.random.gamma(units_mean[i], 1, size=1000000)).mean()
-                actual_means.append(int(empiric_mean*100) / 100)
+                # empiric_mean = np.ceil(np.random.gamma(units_mean[i], 1, size=1000000)).mean()
+                # New method using cumulative distribution, difference empiric and theoretic < 0.01
+                significant = True
+                theoretic_mean = 0
+                num = 1
+                while significant:
+                    t = (gamma.cdf(num, a=units_mean[i]) - gamma.cdf(num - 1, a=units_mean[i])) * num
+                    theoretic_mean += t
+                    num += 1
+                    if t < 0.01:
+                        significant = False
+                #print(num)
+                actual_means.append(int(theoretic_mean*100) / 100)
+            #print(actual_means)
             self.units_mean = np.array(actual_means)
         else:
             self.units_mean = np.array(units_mean)

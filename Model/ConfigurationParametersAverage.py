@@ -21,6 +21,7 @@ def mergeUserClasses(PathList, debug):
         clickProbabilityList = []
         unitsShapeList = []
         userMeanList = []
+        actualUnitsMeanList = []
 
         f = open(c_path)
         configuration = json.load(f)
@@ -46,6 +47,7 @@ def mergeUserClasses(PathList, debug):
             clickProbabilityList.append(np.array(userClass["clickProbability"]).tolist())
             unitsShapeList.append(np.array(userClass["unitsShape"]))
             userMeanList.append(userClass["usersMean"])
+            actualUnitsMeanList.append(userClass["actualUnitsMean"])
         
         # lambdaList[] ... unitShapeList[] now contain the class parameters for each user in numpy.array form
         # Now compute the weigthed means and create a new configuration
@@ -55,6 +57,7 @@ def mergeUserClasses(PathList, debug):
         conversionRateNpArray = np.average(conversionRateList, weights=userMeanList, axis=0)
         clickProbabilityNpArray = np.average(clickProbabilityList, weights=userMeanList, axis=0)
         unitsShapeNpArray = np.average(unitsShapeList, weights=userMeanList, axis=0)
+        actualUnitsMeanNpArray = np.average(actualUnitsMeanList, weights=userMeanList, axis=0)
 
         if debug:
             print("UsersMean: ", userMeanList)
@@ -93,6 +96,7 @@ def mergeUserClasses(PathList, debug):
         conversionRates = conversionRateNpArray.tolist()
         clickProbability = clickProbabilityNpArray.tolist()
         unitsShape = unitsShapeNpArray.tolist()
+        actualUnitsMean = actualUnitsMeanNpArray.tolist()
 
         mergedConfiguration = {
             "configurationPath": c_path,
@@ -107,6 +111,7 @@ def mergeUserClasses(PathList, debug):
             "units_mean": unitsShape,
             "num_prices": len(conversionRates[0]), 
             "num_prods": len(alphas),
+            "actual_units_mean": actualUnitsMean
         }
 
         if debug:
