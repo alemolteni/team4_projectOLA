@@ -1,4 +1,4 @@
-from Learner.UCB_CR import *
+from Learner.UCB.UCB_Step3 import *
 
 
 class UCB_Step4(UCB_CR):

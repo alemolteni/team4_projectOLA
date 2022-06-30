@@ -56,7 +56,9 @@ class UCB_CR():
         # Choose the arm with the highest upper bound
         else:
             log_time = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-            upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled))
+            upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled,
+                                                out=np.full_like(log_time, 0, dtype=float),
+                                                where=self.times_arms_pulled > 0))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation)
 

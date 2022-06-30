@@ -1,16 +1,9 @@
-from Environment import *
 from Learner.TS_Alphas import TS_Alphas
-from Model.UserClass import *
-from Model.Product import *
-from Model.constants import *
-from Model.GraphProbabilities import *
-from Model.Evaluator.GraphEvaluator import *
 
 from Learner.GreedyLearner import *
 from Learner.TS_CR import *
 from Learner.TS_GW import *
-from Learner.UCB_CR import *
-from Learner.BruteForce import *
+from Learner.UCB.UCB_Step3 import *
 import numpy as np
 import matplotlib.pyplot as plt
 
