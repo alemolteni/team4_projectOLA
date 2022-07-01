@@ -7,6 +7,7 @@ class UCB_Step5(UCB_CR):
                  alphas=np.zeros(5), conversion_rates=np.zeros((5, 4)), secondary=None, Lambda=1, units_mean=None):
         # Can't use click probability
         self.times_arms_pulled_click = np.zeros((num_products, num_products))
+        self.upper_bound_click = np.zeros((num_products, num_products))
         super(UCB_Step5, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices, debug=debug,
                                         alphas=alphas, secondary=secondary, Lambda=Lambda,
                                         conversion_rates=conversion_rates, units_mean=units_mean)
@@ -21,13 +22,21 @@ class UCB_Step5(UCB_CR):
             self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
         # Choose the arm with the highest upper bound
         else:
-            log_time = np.full((self.num_products, self.num_products), 2 * math.log(self.t), dtype=float)
+            log_time_click = np.full((self.num_products, self.num_products), 2 * math.log(self.t), dtype=float)
 
-            upper_deviation_click = np.sqrt(np.divide(log_time, self.times_arms_pulled_click,
-                                                      out=np.full_like(log_time, 0, dtype=float),
+            log_time_cr = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
+
+            upper_deviation_click = np.sqrt(np.divide(log_time_click, self.times_arms_pulled_click,
+                                                      out=np.full_like(log_time_click, 0, dtype=float),
                                                       where=self.times_arms_pulled_click != 0))
 
+            upper_deviation_cr = np.sqrt(np.divide(log_time_cr, self.times_arms_pulled,
+                                                out=np.full_like(log_time_cr, 0, dtype=float),
+                                                where=self.times_arms_pulled > 0))
+
             self.upper_bound_click = np.add(self.clickProbability, upper_deviation_click)
+
+            self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
 
             self.expected_reward = self.compute_expected_reward()
 
@@ -42,6 +51,7 @@ class UCB_Step5(UCB_CR):
             for i in range(0, 4):
                 sum += self.expected_reward[i][self.configuration[i]] * self.alphas[i]
             print("Sum: ", sum)
+            print("CR: ", self.conversion_rates)
         return self.configuration
 
     # Method that update the click probabilities, by counting the user who opened a secondary and dividing it
@@ -49,13 +59,17 @@ class UCB_Step5(UCB_CR):
     def update(self, interactions):
         #   - Step 5: updates graph weights, now they are underestimated, don't know if it is correct.
 
+        visits = np.full(self.num_products, 0)
+        bought = np.full(self.num_products, 0)
         openedFirst = np.zeros(self.num_products)
         openedSecond = np.zeros(self.num_products)
         tot = np.zeros(self.num_products)
 
         single_interactions_list = []
-        for i in interactions:
-            single_interactions_list.append(i)
+        for inter in interactions:
+            single_interactions_list.append(inter)
+            visits = np.add(visits, inter.linearizeVisits())
+            bought = np.add(bought, inter.linearizeBought())
 
         while len(single_interactions_list) > 0:
             p = single_interactions_list.pop(0)
@@ -78,6 +92,11 @@ class UCB_Step5(UCB_CR):
 
         t = 0
         for key in self.secondary:
+            old = self.times_arms_pulled[t][self.configuration[t]]
+            self.times_arms_pulled[t][self.configuration[t]] += visits[t]  # Updates the number of times arm is pulled
+            mean = self.conversion_rates[t][self.configuration[t]]
+            self.conversion_rates[t][self.configuration[t]] = (mean * old + bought[t]) / \
+                                                              self.times_arms_pulled[t][self.configuration[t]]
             old0 = self.times_arms_pulled_click[t][key[0]]
             old1 = self.times_arms_pulled_click[t][key[1]]
             self.times_arms_pulled_click[t][key[0]] += tot[t]
@@ -107,7 +126,7 @@ class UCB_Step5(UCB_CR):
 
                 for prod in range(0, self.num_products):
                     probabilities[prod] = probabilities[prod] * self.margins[prod][test_config[prod]] * \
-                                          self.units_mean[prod] * self.conversion_rates[prod][test_config[prod]]
+                                          self.units_mean[prod] * self.upper_bound_cr[prod][test_config[prod]]
                 exp_rewards[i, j] = probabilities.sum()
         return exp_rewards
 
@@ -116,7 +135,7 @@ class UCB_Step5(UCB_CR):
         armConvRates = []
         for k in range(0, len(test_config)):
             armMargins.append(self.margins[k][test_config[k]])
-            armConvRates.append(self.conversion_rates[k][test_config[k]])
+            armConvRates.append(self.upper_bound_cr[k][test_config[k]])
 
         graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.upper_bound_click,
                                    lambda_prob=self.Lambda, alphas=self.alphas, conversion_rates=armConvRates,

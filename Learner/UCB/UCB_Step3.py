@@ -18,10 +18,10 @@ class UCB_CR():
             secondary = {0: [1, 2], 1: [2, 4], 2: [3, 4], 3: [4, 0],
                          4: [1, 3]}  # Changed secondary syntax to avoid strings
 
-        self.alphas = alphas
-        self.clickProbability = clickProbability
+        self.alphas = alphas.copy()
+        self.clickProbability = clickProbability.copy()
         self.secondary = []
-        self.productList = secondary
+        self.productList = secondary.copy()
         # Using a different syntax than provided
         for p in secondary:
             self.secondary.append([p.getSecondaryProduct(0), p.getSecondaryProduct(1)])
@@ -36,11 +36,11 @@ class UCB_CR():
         if conversion_rates is None:
             self.conversion_rates = np.zeros((self.num_products, self.num_prices))
         else:
-            self.conversion_rates = conversion_rates
+            self.conversion_rates = conversion_rates.copy()
         self.times_arms_pulled = np.full((num_products, num_prices), 0.0)
         self.expected_reward = np.full((self.num_products, self.num_prices), 0.0)
-        self.margins = margins
-        self.units_mean = units_mean
+        self.margins = margins.copy()
+        self.units_mean = units_mean.copy()
 
         self.S = 1
         self.upper_bound_cr = np.zeros((self.num_products, self.num_prices))
@@ -69,7 +69,8 @@ class UCB_CR():
         if self.debug:
             print("Config: ", self.configuration)
             print("Times arms pulled: ", self.times_arms_pulled)
-            if self.t > 4: print("Upper_deviation: ", upper_deviation)
+            if self.t > 4:
+                print("Upper_deviation: ", upper_deviation)
             print("Expected rew: ", self.expected_reward)
             sum = 0
             for i in range(0, 4):
@@ -131,10 +132,10 @@ class UCB_CR():
         return product_prob
 
     # Worst result than before method
-    def forwardExpectation (self, prod, test_config, total=0, trace=[], click_prob=1):
+    def forwardExpectation(self, prod, test_config, total=0, trace=[], click_prob=1):
         trace.append(prod)
         total += click_prob * self.margins[prod][test_config[prod]] * \
-                self.units_mean[prod] * self.upper_bound_cr[prod][test_config[prod]]
+                 self.units_mean[prod] * self.upper_bound_cr[prod][test_config[prod]]
 
         next1 = self.secondary[prod][0]
         next2 = self.secondary[prod][1]
@@ -151,12 +152,12 @@ class UCB_CR():
 
             # Case only first
             trace.append(next1)
-            self.forwardExpectation(next1, test_config, total=total, trace=trace, click_prob=p * (1-b))
+            self.forwardExpectation(next1, test_config, total=total, trace=trace, click_prob=p * (1 - b))
             trace.pop()
 
             # Case only second
             trace.append(next2)
-            self.forwardExpectation(next2, test_config, total=total, trace=trace, click_prob=(1-p) * b)
+            self.forwardExpectation(next2, test_config, total=total, trace=trace, click_prob=(1 - p) * b)
             trace.pop()
         elif self.secondary[prod][0] not in trace and self.secondary[prod][1] in trace:
             # Case only first

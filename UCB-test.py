@@ -1,4 +1,5 @@
 from Learner.UCB.UCB_Step3 import *
+from Learner.UCB.UCB_Step5 import *
 from Learner.UCB.UCB_SlidingWindow import *
 from Model.ConfigurationParametersAverage import mergeUserClasses
 import matplotlib.pyplot as plt
@@ -52,12 +53,12 @@ for i in range(0, len(env)):
     #learner = UCB_Step4(margins=config_margins[i], clickProbability=click_probs[i], secondary=prod_lists[i],
     #                    Lambda=lambdas[i], debug=False)
 
-    #learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
-    #                    debug=False, units_mean=units_means[i], conversion_rates=conv_rates[i])
+    learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
+                        debug=True, units_mean=units_means[i])
 
-    learner = UCB_SlidingWindow(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
-                                secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i],
-                                sliding_window_size=50)
+    #learner = UCB_SlidingWindow(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
+    #                            secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i],
+    #                            sliding_window_size=50)
 
     ts_learner_graph_margins = np.array([])
     ts_learner_env_margins = np.array([])
