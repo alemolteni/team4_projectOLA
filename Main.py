@@ -117,7 +117,7 @@ def testUCB_CR():
 
     secondary = {0: [1, 2], 1: [2, 4], 2: [3, 4], 3: [4, 0], 4: [1, 3]} #Changed secondary sintax to avoid strings
 
-    learner = UCB_CR(margins=margins, clickProbability=clickProb, alphas=alphas, secondary=secondary, Lambda=0.7, debug=True)
+    learner = UCB_Step3(margins=margins, clickProbability=clickProb, alphas=alphas, secondary=secondary, Lambda=0.7, debug=True)
     #learner = UCB(margins=margins)
     n_experiments = 100
 

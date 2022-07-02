@@ -2,7 +2,7 @@ from Learner.UCB.UCB_Step3 import *
 import numpy as np
 
 
-class UCB_SlidingWindow(UCB_CR):
+class UCB_SlidingWindow(UCB_Step3):
 
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.zeros(5),
                  clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, sliding_window_size=20, units_mean=None):

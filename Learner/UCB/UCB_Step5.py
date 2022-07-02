@@ -2,7 +2,7 @@
 from Learner.UCB.UCB_Step3 import *
 
 
-class UCB_Step5(UCB_CR):
+class UCB_Step5(UCB_Step3):
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False,
                  alphas=np.zeros(5), conversion_rates=np.zeros((5, 4)), secondary=None, Lambda=1, units_mean=None):
         # Can't use click probability

@@ -1,7 +1,7 @@
 from Learner.UCB.UCB_Step3 import *
 
 
-class UCB_Step4(UCB_CR):
+class UCB_Step4(UCB_Step3):
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False,
                  clickProbability=np.ones((5, 5)), secondary=None, Lambda=1):
         # Can't use conversion rates and can't use alphas

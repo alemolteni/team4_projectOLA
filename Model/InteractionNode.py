@@ -155,3 +155,6 @@ class InteractionNode:
 
     def getProduct(self):
         return self.product
+
+    def getFeaturesValue(self):
+        return self.featuresValues
