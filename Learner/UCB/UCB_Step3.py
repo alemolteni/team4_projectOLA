@@ -109,15 +109,11 @@ class UCB_Step3():
             for j in range(0, self.num_prices):
                 test_config = self.configuration
                 test_config[i] = j
-                probabilities = self.compute_product_prob(i, test_config)
-
-                for prod in range(0, self.num_products):
-                    probabilities[prod] = probabilities[prod] * self.margins[prod][test_config[prod]] * \
-                                          self.units_mean[prod] * self.upper_bound_cr[prod][test_config[prod]]
-                exp_rewards[i, j] = probabilities.sum()
+                margin = self.compute_product_margin(test_config)
+                exp_rewards[i, j] = margin
         return exp_rewards
 
-    def compute_product_prob(self, prod, test_config):
+    def compute_product_margin(self, test_config):
         armMargins = []
         armConvRates = []
         for k in range(0, len(test_config)):
@@ -128,8 +124,8 @@ class UCB_Step3():
                                    lambda_prob=self.Lambda, alphas=self.alphas, conversion_rates=armConvRates,
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False, convert_units=False)
-        product_prob = graphEval.computeSingleProduct(prod)
-        return product_prob
+        margin = graphEval.computeMargin()
+        return margin
 
     # Worst result than before method
     def forwardExpectation(self, prod, test_config, total=0, trace=[], click_prob=1):
