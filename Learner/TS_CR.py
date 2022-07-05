@@ -45,9 +45,24 @@ class TS_CR(TS):
             for j in range(0, self.num_prices):
                 test_config = self.last_pulled_config
                 test_config[i] = j
-                exp_rewards[i, j] = np.random.beta(self.beta_parameters[i, j, 0], self.beta_parameters[i, j, 1]) * \
-                                    self.margins[i][j] * self.compute_product_prob(i, test_config)
+                margin = self.compute_product_margin(test_config)
+                exp_rewards[i, j] = margin
+
         return exp_rewards
+
+    def compute_product_margin(self, test_config):
+        armMargins = []
+        armConvRates = []
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(np.random.beta(self.beta_parameters[k, test_config[k], 0], self.beta_parameters[k, test_config[k], 1]))
+
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
+        return margin
 
     def update(self, interactions, pulledArm):
         # From daily interactions extract needed information, depending on step uncertainty:
