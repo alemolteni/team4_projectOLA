@@ -6,7 +6,9 @@ class UCB_Step5(UCB_Step3):
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False,
                  alphas=np.zeros(5), conversion_rates=np.zeros((5, 4)), secondary=None, Lambda=1, units_mean=None):
         # Can't use click probability
-        self.times_arms_pulled_click = np.zeros((num_products, num_products))
+        self.times_arms_pulled_click = np.zeros((num_products))
+        self.times_first_opened = np.zeros((num_products))
+        self.times_second_opened = np.zeros((num_products))
         self.upper_bound_click = np.zeros((num_products, num_products))
         super(UCB_Step5, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices, debug=debug,
                                         alphas=alphas, secondary=secondary, Lambda=Lambda,
@@ -47,10 +49,6 @@ class UCB_Step5(UCB_Step3):
             print("Times arms pulled: ", self.times_arms_pulled)
             #if self.t > 4: print("Upper_deviation: ", upper_deviation)
             print("Expected rew: ", self.expected_reward)
-            sum = 0
-            for i in range(0, 4):
-                sum += self.expected_reward[i][self.configuration[i]] * self.alphas[i]
-            print("Sum: ", sum)
             print("CR: ", self.conversion_rates)
         return self.configuration
 
@@ -63,7 +61,6 @@ class UCB_Step5(UCB_Step3):
         bought = np.full(self.num_products, 0)
         openedFirst = np.zeros(self.num_products)
         openedSecond = np.zeros(self.num_products)
-        tot = np.zeros(self.num_products)
 
         single_interactions_list = []
         for inter in interactions:
@@ -75,62 +72,39 @@ class UCB_Step5(UCB_Step3):
             p = single_interactions_list.pop(0)
 
             # update
-            if p.bought:
-                tot[p.product] += 1
+            if p.bought == 1:
 
                 # first element
-                if p.sec1Opened:
+                if p.sec1Opened == 1:
                     openedFirst[p.product] += 1
 
                 # second element
-                if p.sec2Opened:
+                if p.sec2Opened == 1:
                     openedSecond[p.product] += 1
 
             # expand
             for j in range(0, len(p.following)):
                 single_interactions_list.append(p.following[j])
+        self.times_arms_pulled_click = np.add(self.times_arms_pulled_click, bought)
+        self.times_first_opened = np.add(self.times_first_opened, openedFirst)
+        self.times_second_opened = np.add(self.times_second_opened, openedSecond)
 
-        t = 0
-        for key in self.secondary:
-            old = self.times_arms_pulled[t][self.configuration[t]]
-            self.times_arms_pulled[t][self.configuration[t]] += visits[t]  # Updates the number of times arm is pulled
-            mean = self.conversion_rates[t][self.configuration[t]]
-            self.conversion_rates[t][self.configuration[t]] = (mean * old + bought[t]) / \
-                                                              self.times_arms_pulled[t][self.configuration[t]]
-            old0 = self.times_arms_pulled_click[t][key[0]]
-            old1 = self.times_arms_pulled_click[t][key[1]]
-            self.times_arms_pulled_click[t][key[0]] += tot[t]
-            self.times_arms_pulled_click[t][key[1]] += tot[t]
-            mean0 = self.clickProbability[t][key[0]]
-            mean1 = self.clickProbability[t][key[1]]
+        for i in range(0, self.num_products):
+            old = self.times_arms_pulled[i][self.configuration[i]]
+            self.times_arms_pulled[i][self.configuration[i]] += visits[i]  # Updates the number of times arm is pulled
+            mean = self.conversion_rates[i][self.configuration[i]]
+            self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
+                                                              self.times_arms_pulled[i][self.configuration[i]]
 
-            self.clickProbability[t][key[0]] = (mean0 * old0 + openedFirst[t]) / self.times_arms_pulled_click[t][key[0]]
-            self.clickProbability[t][key[1]] = (mean1 * self.Lambda * old1 + openedSecond[t]) / self.times_arms_pulled_click[t][key[1]]
-            self.clickProbability[t][key[1]] = self.clickProbability[t][key[1]] / self.Lambda
-
-            t += 1
+            self.clickProbability[i][self.secondary[i][0]] = self.times_first_opened[i] / self.times_arms_pulled_click[i]
+            self.clickProbability[i][self.secondary[i][1]] = self.times_second_opened[i] / self.times_arms_pulled_click[i]
+            self.clickProbability[i][self.secondary[i][1]] = self.clickProbability[i][self.secondary[i][1]] / self.Lambda
 
         if self.debug:
             print("Click Probability: ", self.clickProbability)
+            print("Times arms pulled click: ", self.times_arms_pulled_click)
 
-    def compute_expected_reward(self):
-        # It should return a matrix #PROD x #LEVELS in which the elements are the computed rewards
-        # Then pull arm will use this to choose the arm with the max expected reward as next
-
-        exp_rewards = np.zeros((self.num_products, self.num_prices))
-        for i in range(0, self.num_products):
-            for j in range(0, self.num_prices):
-                test_config = self.configuration
-                test_config[i] = j
-                probabilities = self.compute_product_prob(i, test_config)
-
-                for prod in range(0, self.num_products):
-                    probabilities[prod] = probabilities[prod] * self.margins[prod][test_config[prod]] * \
-                                          self.units_mean[prod] * self.upper_bound_cr[prod][test_config[prod]]
-                exp_rewards[i, j] = probabilities.sum()
-        return exp_rewards
-
-    def compute_product_prob(self, prod, test_config):
+    def compute_product_margin(self, test_config):
         armMargins = []
         armConvRates = []
         for k in range(0, len(test_config)):
@@ -138,8 +112,9 @@ class UCB_Step5(UCB_Step3):
             armConvRates.append(self.upper_bound_cr[k][test_config[k]])
 
         graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.upper_bound_click,
-                                   lambda_prob=self.Lambda, alphas=self.alphas, conversion_rates=armConvRates,
+                                   lambda_prob=self.Lambda, alphas=self.alphas,
+                                   conversion_rates=armConvRates,
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False, convert_units=False)
-        product_prob = graphEval.computeSingleProduct(prod)
-        return product_prob
+        margin = graphEval.computeMargin()
+        return margin

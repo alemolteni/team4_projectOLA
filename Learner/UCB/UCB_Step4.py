@@ -6,8 +6,7 @@ class UCB_Step4(UCB_Step3):
                  clickProbability=np.ones((5, 5)), secondary=None, Lambda=1):
         # Can't use conversion rates and can't use alphas
         self.times_arms_pulled_for_alphas = 0
-        self.times_arms_pulled_for_units = np.zeros(5)
-        self.upper_bound_units = np.zeros(num_products)
+        self.times_arms_pulled_for_units = np.zeros(num_products)
         self.upper_bound_alphas = np.zeros(num_products)
         super(UCB_Step4, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices, debug=debug,
                                         clickProbability=clickProbability, secondary=secondary, Lambda=Lambda)
@@ -25,11 +24,9 @@ class UCB_Step4(UCB_Step3):
             log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
             log_time_single = np.full(self.num_products, 2 * math.log(self.t), dtype=float)
             upper_deviation_cr = np.sqrt(np.divide(log_time_double, self.times_arms_pulled))
-            upper_deviation_units = np.sqrt(np.divide(log_time_single, self.times_arms_pulled_for_units))
             upper_deviation_alpha = np.sqrt(np.divide(log_time_single, self.times_arms_pulled_for_alphas))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
-            self.upper_bound_units = np.add(self.units_mean, upper_deviation_units)
             self.upper_bound_alphas = np.add(self.alphas, upper_deviation_alpha)
 
             self.expected_reward = self.compute_expected_reward()
@@ -93,33 +90,17 @@ class UCB_Step4(UCB_Step3):
             print("Num units pulled: ", self.times_arms_pulled_for_units)
         return
 
-    def compute_expected_reward(self):
-        # It should return a matrix #PROD x #LEVELS in which the elements are the computed rewards
-        # Then pull arm will use this to choose the arm with the max expected reward as next
-
-        exp_rewards = np.zeros((self.num_products, self.num_prices))
-        for i in range(0, self.num_products):
-            for j in range(0, self.num_prices):
-                test_config = self.configuration
-                test_config[i] = j
-                probabilities = self.compute_product_prob(i, test_config)
-
-                for prod in range(0, self.num_products):
-                    probabilities[prod] = probabilities[prod] * self.margins[prod][test_config[prod]] * \
-                                          self.upper_bound_units[prod] * self.upper_bound_cr[prod][test_config[prod]]
-                exp_rewards[i, j] = probabilities.sum()
-        return exp_rewards
-
-    def compute_product_prob(self, prod, test_config):
+    def compute_product_margin(self, test_config):
         armMargins = []
         armConvRates = []
         for k in range(0, len(test_config)):
             armMargins.append(self.margins[k][test_config[k]])
             armConvRates.append(self.upper_bound_cr[k][test_config[k]])
 
+        #Units mean doesn't need an upper bound since it doesn't depend on the price of the product
         graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
                                    lambda_prob=self.Lambda, alphas=self.upper_bound_alphas, conversion_rates=armConvRates,
                                    margins=armMargins,
-                                   units_mean=self.upper_bound_units, verbose=False, convert_units=False)
-        product_prob = graphEval.computeSingleProduct(prod)
-        return product_prob
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
+        return margin

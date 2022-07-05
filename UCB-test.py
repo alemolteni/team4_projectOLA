@@ -47,14 +47,14 @@ fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex=True, figsize=(16, 12))
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
     print("Running config: ", config_name)
-    learner = UCB_Step3(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
-                        secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i])
+    #learner = UCB_Step3(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
+    #                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i])
 
     #learner = UCB_Step4(margins=config_margins[i], clickProbability=click_probs[i], secondary=prod_lists[i],
     #                    Lambda=lambdas[i], debug=False)
 
-    #learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
-    #                    debug=False, units_mean=units_means[i])
+    learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
+                        debug=False, units_mean=units_means[i])
 
     #learner = UCB_SlidingWindow(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
     #                            secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i],
