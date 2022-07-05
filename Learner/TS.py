@@ -11,8 +11,9 @@ class TS:
         self.num_products = num_products
         self.num_prices = num_prices
         # Incremental average m(n+1) = m(n) + (new_val - m(n)) / n+1
-        self.conversion_rates_distro = np.full((num_products, num_prices, 2), 0)
-        self.used_conv_rates = np.full((self.num_products, self.num_prices), 0)
+        self.conversion_rates_distro = np.full((num_products, num_prices, 2), 1)
+        self.used_conv_rates = np.full((self.num_products, self.num_prices), 0, dtype=float)
+        self.configuration = np.zeros((num_products), dtype=int)
 
     def pull_arm(self):
         # Choose arm with higher reward w.r.t. generated conversion rates
@@ -21,10 +22,11 @@ class TS:
             for j in range(0, self.num_prices):
                 params = self.conversion_rates_distro[i][j]
                 self.used_conv_rates[i][j] = np.random.beta(params[0], params[1])
-
+        # print("Generated conv rates {}".format(self.used_conv_rates))
         # XXX must be the expected reward and must be computed for each product and price level
         self.expected_reward = self.compute_expected_rewards()
         self.configuration = np.argmax(self.expected_reward, axis=1)
+        # print(self.expected_reward)
         return self.configuration
 
     def update(self, interactions):
