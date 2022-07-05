@@ -51,22 +51,26 @@ class TS_CR(TS):
 
         for i in range(0, self.num_products):
             for j in range(0, self.num_prices):
-                config = np.copy(self.configuration)
-                config[i] = j
-                armMargins = []
-                armConvRates = []
-                for k in range(0, len(config)):
-                    armMargins.append(self.margins[k][config[k]])
-                    armConvRates.append(self.used_conv_rates[k][config[k]])
+                test_config = self.last_pulled_config
+                test_config[i] = j
+                margin = self.compute_product_margin(test_config)
+                exp_rewards[i, j] = margin
 
-                graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.click_prob,
-                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
-                                   margins=armMargins, units_mean=self.units_mean, convert_units=False, verbose=False)
-                margin = graphEval.computeMargin()
-                # print("Margin for {} is {} (margins={} ;; convRates={}".format(config, margin, armMargins, armConvRates))
-                exp_rewards[i][j] = margin
-                
         return exp_rewards
+
+    def compute_product_margin(self, test_config):
+        armMargins = []
+        armConvRates = []
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(np.random.beta(self.beta_parameters[k, test_config[k], 0], self.beta_parameters[k, test_config[k], 1]))
+
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
+        return margin
 
     def update(self, interactions, pulledArm):
         super(TS_CR, self).update(interactions)
