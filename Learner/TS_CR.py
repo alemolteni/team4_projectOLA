@@ -17,7 +17,13 @@ class TS_CR(TS):
         self.l = l
         self.last_pulled_config = [0, 0, 0, 0, 0]
         self.product_list = secondary_prod
-        self.units_mean = units_mean
+
+        actual_means = []
+        for i in range(0,len(units_mean)):
+            empiric_mean = np.ceil(np.random.gamma(units_mean[i], 1, size=1000000)).mean()
+            actual_means.append(int(empiric_mean*100) / 100)
+        self.units_mean = actual_means
+        # self.units_mean = units_mean
 
         self.update_conversion_rates()
         # Take as input also alphas or other information known needed for computing expected rewards
@@ -28,6 +34,7 @@ class TS_CR(TS):
         # then they are used to sample a conversion rate for each arm
 
     def pull_arm(self):
+        return super(TS_CR, self).pull_arm()
         pulled_config = [0, 0, 0, 0, 0]
         exp_rewards = self.compute_expected_rewards()
         for i in range(0, self.num_products):
@@ -41,15 +48,29 @@ class TS_CR(TS):
         # Then pull arm will use this to choose the arm with the max expected reward as next
 
         exp_rewards = np.zeros((self.num_products, self.num_prices))
+
         for i in range(0, self.num_products):
             for j in range(0, self.num_prices):
-                test_config = self.last_pulled_config
-                test_config[i] = j
-                exp_rewards[i, j] = np.random.beta(self.beta_parameters[i, j, 0], self.beta_parameters[i, j, 1]) * \
-                                    self.margins[i][j] * self.compute_product_prob(i, test_config)
+                config = np.copy(self.configuration)
+                config[i] = j
+                armMargins = []
+                armConvRates = []
+                for k in range(0, len(config)):
+                    armMargins.append(self.margins[k][config[k]])
+                    armConvRates.append(self.used_conv_rates[k][config[k]])
+
+                graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins, units_mean=self.units_mean, convert_units=False, verbose=False)
+                margin = graphEval.computeMargin()
+                # print("Margin for {} is {} (margins={} ;; convRates={}".format(config, margin, armMargins, armConvRates))
+                exp_rewards[i][j] = margin
+                
         return exp_rewards
 
     def update(self, interactions, pulledArm):
+        super(TS_CR, self).update(interactions)
+        return 
         # From daily interactions extract needed information, depending on step uncertainty:
         #   - Step 3: update belief over conversion rates
         #   - Step 4: update conversion rates, 𝛼 ratios, #units sold per product
