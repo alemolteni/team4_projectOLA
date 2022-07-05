@@ -143,70 +143,167 @@ class UserClass:
         gen_arr = np.random.rand(len(self.features_prob))
         return gen_arr < self.features_prob
 
-    def generateProductInteraction(self, currentProduct):
-        if self.debug: print('\ncurrentProduct: ', currentProduct)
+    def generateProductInteraction(self, p):
+        if self.debug: print('\ncurrentProduct: ', p)
 
-        buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]
-        bought = np.random.binomial(1, buyingProb)
+        queue = [p]
+        visitingOrder = []
+        # Using a BFS approach to visit the graph
+        while len(queue) > 0:
+            currentProduct = queue.pop(0)
 
-        # variable 'units' keeps track of the units of product bought by the user, it's the result a gamma distribution
-        units = 0
-        following = []
+            buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]
+            bought = np.random.binomial(1, buyingProb)
 
-        # List 'history' keeps track of the products that have been displayed as 'primary'
-        #
-        #   e.g.    Products 1 and 4 have been displayed as primary products in some previous iteration
-        #           --> history = [0, 1, 1, 0, 1],
-        #           the user then click on product 3, so product 3 is displayed as primary (generateProductInteraction()
-        #           is summoned with product 3 as input).
-        #           history is updated: --> history = [0, 1, 0, 0, 1]
-        self.history[currentProduct] = 0
+            # variable 'units' keeps track of the units of product bought by the user, it's the result a gamma distribution
+            units = 0
 
-        # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
-        # displayed
+            # List 'history' keeps track of the products that have been displayed as 'primary'
+            #
+            #   e.g.    Products 1 and 4 have been displayed as primary products in some previous iteration
+            #           --> history = [0, 1, 1, 0, 1],
+            #           the user then click on product 3, so product 3 is displayed as primary (generateProductInteraction()
+            #           is summoned with product 3 as input).
+            #           history is updated: --> history = [0, 1, 0, 0, 1]
+            self.history[currentProduct] = 0
 
-        firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
-        if self.debug: print('sec1: ', firstSlot)
-        secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
-        if self.debug: print('sec2: ', secondSlot)
+            # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
+            # displayed
 
-        # Initialization of variables sec1Bought and sec2Bought
-        sec1Opened = 0
-        sec2Opened = 0
+            firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
+            if self.debug: print('sec1: ', firstSlot)
+            secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
+            if self.debug: print('sec2: ', secondSlot)
 
-        # If the primary product displayed is bought that the click probability of the two linked secondary products
-        # must be addressed
-        if bought == 1:
-            units = np.random.gamma(self.units_gamma_shape[currentProduct], 1, None)
-            units = math.ceil(units) # Ceil bc we want at least one unit
-            assert units > 0
+            # Initialization of variables sec1Bought and sec2Bought
+            sec1Opened = 0
+            sec2Opened = 0
 
-            if self.debug: print('units bought: ', units)
+            following = []
 
-            # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
-            # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
-            # has to be multiplied by the factor 'Lambda'
-            clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * self.history[firstSlot]
+            # If the primary product displayed is bought that the click probability of the two linked secondary products
+            # must be addressed
+            if bought == 1:
+                units = np.random.gamma(self.units_gamma_shape[currentProduct], 1, None)
+                units = math.ceil(units)  # Ceil bc we want at least one unit
+                assert units > 0
 
-            # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
-            # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
-            sec1Opened = np.random.binomial(1, clickProbSec1)
-            if self.debug: print('sec1Opened: ', sec1Opened)
-            if sec1Opened == 1:
-                following.append(self.generateProductInteraction(firstSlot))
+                if self.debug: print('units bought: ', units)
 
-            clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * self.history[secondSlot]
-            sec2Opened = np.random.binomial(1, clickProbSec2)
-            if self.debug: print('sec2Opened: ', sec2Opened)
-            if sec2Opened == 1:
-                following.append(self.generateProductInteraction(secondSlot))
+                # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
+                # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
+                # has to be multiplied by the factor 'Lambda'
+                clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * self.history[
+                    firstSlot]
+
+                # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
+                # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
+                sec1Opened = np.random.binomial(1, clickProbSec1)
+                if self.debug: print('sec1Opened: ', sec1Opened)
+                if sec1Opened == 1:
+                    self.history[firstSlot] = 0
+                    queue.append(firstSlot)
+                    following.append(firstSlot)
+
+                clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * \
+                                self.history[secondSlot]
+                sec2Opened = np.random.binomial(1, clickProbSec2)
+                if sec2Opened == 1:
+                    self.history[secondSlot] = 0
+                    queue.append(secondSlot)
+                    following.append(secondSlot)
+                if self.debug: print('sec2Opened: ', sec2Opened)
+            # At the end of the interaction between the user and the current product an INTERACTION NODE is generated to
+            # keep track of the user history
+            interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
+                                              firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
+                                              sec2Opened=sec2Opened, bought=bought, units=units, following=following,
+                                              num_products=len(self.alphas))
+            visitingOrder.append(interactionNode)
+
+        # Transforming visiting order in a linked list
+        i = 0
+        for inter in visitingOrder:
+            #print(inter.product)
+            trueFollowing = []
+            if len(inter.following) == 2:
+                trueFollowing.append(visitingOrder[i+1])
+                trueFollowing.append(visitingOrder[i+2])
+                i += 2
+            elif len(inter.following) == 1:
+                trueFollowing.append(visitingOrder[i+1])
+                i += 1
+            inter.following = trueFollowing
+
+        return visitingOrder[0]
 
 
 
-        # At the end of the interaction between the user and the current product an INTERACTION NODE is generated to
-        # keep track of the user history
-        interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
-                                          firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
-                                          sec2Opened=sec2Opened, bought=bought, units=units, following=following,
-                                          num_products=len(self.alphas))
-        return interactionNode
+    """
+    old generateContent method
+    
+    buyingProb = self.conversionRate[currentProduct][self.currentPrice[currentProduct]]
+    bought = np.random.binomial(1, buyingProb)
+
+    # variable 'units' keeps track of the units of product bought by the user, it's the result a gamma distribution
+    units = 0
+    following = []
+
+    # List 'history' keeps track of the products that have been displayed as 'primary'
+    #
+    #   e.g.    Products 1 and 4 have been displayed as primary products in some previous iteration
+    #           --> history = [0, 1, 1, 0, 1],
+    #           the user then click on product 3, so product 3 is displayed as primary (generateProductInteraction()
+    #           is summoned with product 3 as input).
+    #           history is updated: --> history = [0, 1, 0, 0, 1]
+    self.history[currentProduct] = 0
+
+    # variables 'sec1' and 'sec2' are the two secondary products linked to the primary product that is being
+    # displayed
+
+    firstSlot = self.productList[currentProduct].getSecondaryProduct(0)
+    if self.debug: print('sec1: ', firstSlot)
+    secondSlot = self.productList[currentProduct].getSecondaryProduct(1)
+    if self.debug: print('sec2: ', secondSlot)
+
+    # Initialization of variables sec1Bought and sec2Bought
+    sec1Opened = 0
+    sec2Opened = 0
+
+    # If the primary product displayed is bought that the click probability of the two linked secondary products
+    # must be addressed
+    if bought == 1:
+        units = np.random.gamma(self.units_gamma_shape[currentProduct], 1, None)
+        units = math.ceil(units) # Ceil bc we want at least one unit
+        assert units > 0
+
+        if self.debug: print('units bought: ', units)
+
+        # variables 'clickProbSec1' and 'clickProbSec2' are the click probabilities associated to the two
+        # secondary products 'sec1' and 'sec2 NB: the click of the secondary product in the second slot (sec2)
+        # has to be multiplied by the factor 'Lambda'
+        clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * self.history[firstSlot]
+
+        # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
+        # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
+        sec1Opened = np.random.binomial(1, clickProbSec1)
+        if self.debug: print('sec1Opened: ', sec1Opened)
+        if sec1Opened == 1:
+            following.append(self.generateProductInteraction(firstSlot))
+
+        clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * self.history[secondSlot]
+        sec2Opened = np.random.binomial(1, clickProbSec2)
+        if self.debug: print('sec2Opened: ', sec2Opened)
+        if sec2Opened == 1:
+            following.append(self.generateProductInteraction(secondSlot))
+
+
+
+    # At the end of the interaction between the user and the current product an INTERACTION NODE is generated to
+    # keep track of the user history
+    interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
+                                      firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
+                                      sec2Opened=sec2Opened, bought=bought, units=units, following=following,
+                                      num_products=len(self.alphas))
+    
+    """

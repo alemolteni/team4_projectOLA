@@ -39,7 +39,7 @@ for i in range(0, len(files)):
 
 # print(np.multiply(config_margins[0], conv_rates[0]))
 # print(actual_unit_mean)
-print(click_probs[0])
+print(click_probs[0], click_probs[1], click_probs[2], click_probs[3])
 
 n_experiments = 100
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex=True, figsize=(16, 12))

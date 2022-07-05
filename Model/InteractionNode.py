@@ -104,6 +104,31 @@ class InteractionNode:
             visits = np.add(visits,next.linearizeVisits())
         return visits
 
+    def linearizeOpenedFirstTrial(self, trace=None):
+        if trace is None:
+            trace = [self.product]
+        trace.append(self.product)
+        boughtAndCanOpenF = np.full((self.num_products), 0)
+        if self.firstSlot not in trace:
+            boughtAndCanOpenF[self.product] = self.bought
+        for next in self.following:
+            trace.append(next.product)
+        for next in self.following:
+            boughtAndCanOpenF = np.add(boughtAndCanOpenF, next.linearizeOpenedFirstTrial(trace))
+        return boughtAndCanOpenF
+
+    def linearizeOpenedSecondTrial(self, trace=None):
+        if trace is None:
+            trace = [self.product]
+        boughtAndCanOpenS = np.full((self.num_products), 0)
+        if self.secondSlot not in trace:
+            boughtAndCanOpenS[self.product] = self.bought
+        for next in self.following:
+            trace.append(next.product)
+        for next in self.following:
+            boughtAndCanOpenS = np.add(boughtAndCanOpenS, next.linearizeOpenedSecondTrial(trace))
+        return boughtAndCanOpenS
+
     def linearizeBought(self):
         bought = np.full((self.num_products), 0)
         bought[self.product] = self.bought
