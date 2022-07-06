@@ -50,8 +50,11 @@ class UCB_SlidingWindow(UCB_Step3):
         for i in range(0, len(self.configuration)):
             self.times_arms_pulled[i][self.configuration[i]] += visits[i]
             self.times_arms_bought[i][self.configuration[i]] += bought[i]
-            self.conversion_rates[i][self.configuration[i]] = self.times_arms_bought[i][self.configuration[i]] / \
+            if self.times_arms_pulled[i][self.configuration[i]] > 0:
+                self.conversion_rates[i][self.configuration[i]] = self.times_arms_bought[i][self.configuration[i]] / \
                                                                 self.times_arms_pulled[i][self.configuration[i]]
+            else:
+                self.conversion_rates[i][self.configuration[i]] = 0.0
 
         if self.debug:
             # print(self.circular_buffer_bought)

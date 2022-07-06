@@ -2,14 +2,8 @@ import numpy as np
 import math
 from Model.Evaluator.GraphEvaluator import *
 
-# For testing
-
-from Environment import *
-from Model.ConfigurationParametersAverage import mergeUserClasses
-
 
 class UCB_Step3():
-
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.ones(5),
                  clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, conversion_rates=None, units_mean=None):
         if units_mean is None:
@@ -93,7 +87,8 @@ class UCB_Step3():
             old = self.times_arms_pulled[i][self.configuration[i]]
             self.times_arms_pulled[i][self.configuration[i]] += visits[i]  # Updates the number of times arm is pulled
             mean = self.conversion_rates[i][self.configuration[i]]
-            self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
+            if self.times_arms_pulled[i][self.configuration[i]] > 0:
+                self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
                                                               self.times_arms_pulled[i][self.configuration[i]]
 
         if self.debug:

@@ -50,7 +50,6 @@ class UCB_Step4(UCB_Step3):
     def update(self, interactions):
         # From daily interactions extract needed information, depending on step uncertainty:
         #   - Step 4: update conversion rates, 𝛼 ratios, units sold per product
-        # ToDo: add unit sold per product evaluation
 
         visits = np.full(self.num_products, 0)
         bought = np.full(self.num_products, 0)
@@ -75,13 +74,15 @@ class UCB_Step4(UCB_Step3):
             meanUnits = self.units_mean[i]
             meanAlpha = self.alphas[i]
 
-            self.conversion_rates[i][self.configuration[i]] = (meanCR * oldCR + bought[i]) / \
+            if self.times_arms_pulled[i][self.configuration[i]] > 0:
+                self.conversion_rates[i][self.configuration[i]] = (meanCR * oldCR + bought[i]) / \
                                                               self.times_arms_pulled[i][self.configuration[i]]
 
-            if self.times_arms_pulled_for_units[i] != 0:
+            if self.times_arms_pulled_for_units[i] > 0:
                 self.units_mean[i] = (meanUnits * oldUnits + num_units[i]) / self.times_arms_pulled_for_units[i]
 
-            self.alphas[i] = (meanAlpha * oldAlpha + started[i]) / self.times_arms_pulled_for_alphas
+            if self.times_arms_pulled_for_alphas > 0:
+                self.alphas[i] = (meanAlpha * oldAlpha + started[i]) / self.times_arms_pulled_for_alphas
 
         if self.debug:
             print("Conversion rates: ", self.conversion_rates)

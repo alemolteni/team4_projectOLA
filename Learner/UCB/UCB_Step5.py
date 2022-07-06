@@ -99,12 +99,14 @@ class UCB_Step5(UCB_Step3):
             old = self.times_arms_pulled[i][self.configuration[i]]
             self.times_arms_pulled[i][self.configuration[i]] += visits[i]  # Updates the number of times arm is pulled
             mean = self.conversion_rates[i][self.configuration[i]]
-            self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
+            if self.times_arms_pulled[i][self.configuration[i]] > 0:
+                self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
                                                               self.times_arms_pulled[i][self.configuration[i]]
-
-            self.clickProbability[i][self.secondary[i][0]] = self.times_first_opened[i] / self.trial_click_first[i]
-            self.clickProbability[i][self.secondary[i][1]] = self.times_second_opened[i] / self.trial_click_second[i]
-            self.clickProbability[i][self.secondary[i][1]] = self.clickProbability[i][self.secondary[i][1]] / self.Lambda
+            if self.trial_click_first[i] > 0:
+                self.clickProbability[i][self.secondary[i][0]] = self.times_first_opened[i] / self.trial_click_first[i]
+            if self.trial_click_second[i] > 0:
+                self.clickProbability[i][self.secondary[i][1]] = self.times_second_opened[i] / self.trial_click_second[i]
+                self.clickProbability[i][self.secondary[i][1]] = self.clickProbability[i][self.secondary[i][1]] / self.Lambda
 
         if self.debug:
             print("Click Probability: ", self.clickProbability)

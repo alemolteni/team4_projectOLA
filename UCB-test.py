@@ -2,7 +2,9 @@ from Learner.UCB.UCB_Step3 import *
 from Learner.UCB.UCB_Step5 import *
 from Learner.UCB.UCB_SlidingWindow import *
 from Model.ConfigurationParametersAverage import mergeUserClasses
+from Model.Evaluator.GraphEvaluatorMC import *
 import matplotlib.pyplot as plt
+from Environment import *
 
 files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
          './Configs/configuration4.json', './Configs/configuration5.json']
@@ -36,8 +38,11 @@ for i in range(0, len(files)):
 
 # print(np.multiply(config_margins[0], conv_rates[0]))
 # print(actual_unit_mean)print(click_probs[0], click_probs[1], click_probs[2], click_probs[3])
+# print(alphas[0])
+# print(actual_unit_mean[0])
+# print((np.multiply(conv_rates[0], config_margins[0])))
 
-n_experiments = 1000
+n_experiments = 100
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex=True, figsize=(16, 12))
 
 for i in range(0, len(env)):
