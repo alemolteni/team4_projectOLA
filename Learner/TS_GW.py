@@ -12,14 +12,15 @@ class TS_GW(TS):
         self.margins = margins
         self.alphas = alphas
         self.beta_parameters = np.ones((num_products, num_products, 2))
-        self.estimated_click_prob = np.zeros((num_products, num_products))
+        self.mean_click_prob = np.zeros((num_products, num_products)) # used to check if they converge to the real probabilities
+        self.sample_click_prob = np.zeros((num_products, num_products))
         self.conversion_rates = conversion_rates
         self.l = l
         self.last_pulled_config = [0, 0, 0, 0, 0]
         self.product_list = secondary_prod
         self.units_mean = units_mean
 
-        self.update_click_prob(init=True)
+        self.draw_sample_click_prob()
         # Take as input also alphas or other information known needed for computing expected rewards
         # in this class only conversion rates are unknown
 
@@ -44,9 +45,25 @@ class TS_GW(TS):
             for j in range(0, self.num_prices):
                 test_config = self.last_pulled_config
                 test_config[i] = j
-                exp_rewards[i, j] = self.conversion_rates[i][j] * \
-                                    self.margins[i][j] * self.compute_product_prob(i, test_config)
+                margin = self.compute_product_margin(test_config)
+                exp_rewards[i, j] = margin
+                #exp_rewards[i, j] = self.conversion_rates[i][j] * \
+                #                    self.margins[i][j] * self.compute_product_prob(i, test_config)
         return exp_rewards
+
+    def compute_product_margin(self, test_config):
+        armMargins = []
+        armConvRates = []
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(self.conversion_rates[k][test_config[k]])
+
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.sample_click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
+        return margin
 
     def update(self, interactions, pulledArm):
         # From daily interactions extract needed information, depending on step uncertainty:
@@ -85,19 +102,28 @@ class TS_GW(TS):
             for j in range(0, len(p.following)):
                 single_interactions_list.append(p.following[j])
 
-        self.update_click_prob()
+        self.draw_sample_click_prob()
         return
 
-    def update_click_prob(self, init=False):
+    def get_mean_click_prob(self):
+        init = False
         for i in range(0, self.num_products):
             for j in range(0, self.num_products):
                 if init and (self.product_list[i].getSecondaryProduct(0) == j or self.product_list[i].getSecondaryProduct(1) == j):
-                    self.estimated_click_prob[i, j] = 0.5
+                    self.mean_click_prob[i, j] = 0.5
                 elif self.product_list[i].getSecondaryProduct(0) == j or self.product_list[i].getSecondaryProduct(1) == j:  # if is a secondary product
-                    self.estimated_click_prob[i, j] = self.beta_parameters[i, j, 0] / (
+                    self.mean_click_prob[i, j] = self.beta_parameters[i, j, 0] / (
                             self.beta_parameters[i, j, 0] + self.beta_parameters[i, j, 1])
                     if self.product_list[i].getSecondaryProduct(1) == j:  # if is the second secondary product
-                        self.estimated_click_prob[i, j] = self.estimated_click_prob[i, j] / self.l
+                        self.mean_click_prob[i, j] = self.mean_click_prob[i, j] / self.l
+        return self.mean_click_prob
+
+    def draw_sample_click_prob(self):
+        for i in range(0, self.num_products):
+            for j in range(0, self.num_products):
+                self.sample_click_prob[i, j] = np.random.beta(self.beta_parameters[i, j, 0], self.beta_parameters[i, j, 1])
+                if self.product_list[i].getSecondaryProduct(0) == j or self.product_list[i].getSecondaryProduct(1) == j:  # if is a secondary product
+                    self.sample_click_prob[i, j] /= self.l
 
     def compute_product_prob(self, prod, test_config):
         armMargins = []
@@ -106,7 +132,7 @@ class TS_GW(TS):
             armMargins.append(self.margins[k][test_config[k]])
             armConvRates.append(self.conversion_rates[k][test_config[k]])
 
-        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.estimated_click_prob,
+        graphEval = GraphEvaluator(products_list=self.product_list, click_prob_matrix=self.sample_click_prob,
                                    lambda_prob=self.l, alphas=self.alphas, conversion_rates=armConvRates,
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False)
