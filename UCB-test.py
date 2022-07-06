@@ -4,9 +4,8 @@ from Learner.UCB.UCB_SlidingWindow import *
 from Model.ConfigurationParametersAverage import mergeUserClasses
 import matplotlib.pyplot as plt
 
-files = ['./Configs/config1.json', './Configs/config3.json', './Configs/configuration4.json',
-         './Configs/configuration5.json']
-# files = ['./Configs/config1.json', './Configs/configuration5.json']
+files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
+         './Configs/configuration4.json', './Configs/configuration5.json']
 env = []
 config_margins = []
 optimal_arms = []
@@ -18,8 +17,6 @@ alphas = []
 units_means = []
 clairvoyant_opt_rew = []
 actual_unit_mean = []
-
-n_loops = 1
 
 for i in range(0, len(files)):
     env.append(Environment(config_path=files[i]))
@@ -38,23 +35,22 @@ for i in range(0, len(files)):
     actual_unit_mean.append(config["actual_units_mean"])
 
 # print(np.multiply(config_margins[0], conv_rates[0]))
-# print(actual_unit_mean)
-print(click_probs[0], click_probs[1], click_probs[2], click_probs[3])
+# print(actual_unit_mean)print(click_probs[0], click_probs[1], click_probs[2], click_probs[3])
 
-n_experiments = 100
+n_experiments = 1000
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex=True, figsize=(16, 12))
 
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
     print("Running config: ", config_name)
-    #learner = UCB_Step3(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
-    #                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i])
+    learner = UCB_Step3(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
+                        secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i])
 
     #learner = UCB_Step4(margins=config_margins[i], clickProbability=click_probs[i], secondary=prod_lists[i],
     #                    Lambda=lambdas[i], debug=False)
 
-    learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
-                        debug=False, units_mean=units_means[i])
+    #learner = UCB_Step5(margins=config_margins[i], alphas=alphas[i], secondary=prod_lists[i], Lambda=lambdas[i],
+    #                    debug=False, units_mean=actual_unit_mean[i])
 
     #learner = UCB_SlidingWindow(margins=config_margins[i], clickProbability=click_probs[i], alphas=alphas[i],
     #                            secondary=prod_lists[i], Lambda=lambdas[i], debug=False, units_mean=actual_unit_mean[i],

@@ -1,4 +1,5 @@
 {
+  "Description": "Three classes with the same click probabilities",
   "optimalMargin": 74.47857142857143,
   "optimalConfig": [1, 1, 1, 1, 1],
   "margins": [
