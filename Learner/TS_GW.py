@@ -74,33 +74,36 @@ class TS_GW(TS):
             single_interactions_list.append(i)
 
         while len(single_interactions_list) != 0:
-            p = single_interactions_list.pop(0)
+            user_interaction_list = [single_interactions_list.pop(0)]
+            bought = np.zeros(self.num_products)
 
             # update
-            if p.bought:
-                # first element
-                if p.sec1Opened:
-                    reward = 1.0
-                else:
-                    reward = 0.0
-                self.beta_parameters[p.product, p.firstSlot, 0] = self.beta_parameters[
-                                                                      p.product, p.firstSlot, 0] + reward
-                self.beta_parameters[p.product, p.firstSlot, 1] = self.beta_parameters[
-                                                                      p.product, p.firstSlot, 1] + 1.0 - reward
+            while len(user_interaction_list) != 0:
+                p = user_interaction_list.pop(0)
+                if p.bought:
+                    bought[p.product] = 1
 
-                # second element
-                if p.sec2Opened:
-                    reward = 1.0
-                else:
-                    reward = 0.0
-                self.beta_parameters[p.product, p.secondSlot, 0] = self.beta_parameters[
-                                                                       p.product, p.secondSlot, 0] + reward
-                self.beta_parameters[p.product, p.secondSlot, 1] = self.beta_parameters[
-                                                                       p.product, p.secondSlot, 1] + 1.0 - reward
+                    if bought[p.firstSlot] == 0:
+                        # first element
+                        if p.sec1Opened:
+                            reward = 1.0
+                        else:
+                            reward = 0.0
+                        self.beta_parameters[p.product, p.firstSlot, 0] += reward
+                        self.beta_parameters[p.product, p.firstSlot, 1] += 1.0 - reward
 
-            # expand
-            for j in range(0, len(p.following)):
-                single_interactions_list.append(p.following[j])
+                    if bought[p.secondSlot] == 0:
+                        # second element
+                        if p.sec2Opened:
+                            reward = 1.0
+                        else:
+                            reward = 0.0
+                        self.beta_parameters[p.product, p.secondSlot, 0] += reward
+                        self.beta_parameters[p.product, p.secondSlot, 1] += 1.0 - reward
+
+                # expand
+                for j in range(0, len(p.following)):
+                    user_interaction_list.append(p.following[j])
 
         self.draw_sample_click_prob()
         return
