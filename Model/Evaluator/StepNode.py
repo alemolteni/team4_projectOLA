@@ -1,12 +1,17 @@
+from math import prod
+from matplotlib import units
 import numpy as np
 
 class StepNode:
-    def __init__(self, product, paths=[], graph_prob=None, verbose=False):
+    def __init__(self, product, paths=[], graph_prob=None, units_mean=None, margins=None, conversion_rates=None, verbose=False):
         self.paths=paths
         self.product = product
         self.feasible_paths = []
         self.graph_prob = graph_prob
         self.verbose = verbose
+        self.units_mean = units_mean
+        self.margins = margins
+        self.conversion_rates = conversion_rates
         productIndex = product
         for i in range(0,len(paths)):
             path = np.array(paths[i])
@@ -31,6 +36,25 @@ class StepNode:
         # by problem construction, in each interaction we can reach a product in a single way (can open a product once)
         return np.array(paths_prob).sum()
 
+    def computeExpectedReward(self):
+        paths_prob = []
+        paths_rew = []
+        # Compute probability of each path
+        for i in range(0,len(self.feasible_paths)):
+            path = self.feasible_paths[i]
+            prob = 1
+            rew = 0
+            for k in range(0,len(path)-1):
+                prob = prob * self.graph_prob.getEdgeProbability(path[k],path[k+1])
+                curr_prod = path[k]
+                rew = rew + self.units_mean[curr_prod] * self.margins[curr_prod]
+            rew = rew + self.units_mean[self.product] * self.margins[self.product] * self.conversion_rates[self.product]
+            if self.verbose: print("Path indexes for product {}: {} with probability {}".format(self.product, path, prob))
+            paths_prob.append(prob)
+            paths_rew.append(rew)
+        # TODO: are the paths independent????
+        return np.multiply(paths_rew, paths_prob).sum()
+
     def merge(self, node):
         if self.product != node.product:
             return
@@ -43,7 +67,8 @@ class StepNode:
         next_nodes = []
         for i in range(0,n_products):
             if self.graph_prob.getEdgeProbability(self.product,i) > 0 :
-                next_nodes.append(StepNode(i,paths=self.feasible_paths,graph_prob=self.graph_prob,verbose=self.verbose))
+                next_nodes.append(StepNode(i,paths=self.feasible_paths,graph_prob=self.graph_prob,margins=self.margins, units_mean=self.units_mean, 
+                                            conversion_rates=self.conversion_rates,verbose=self.verbose))
         return next_nodes
     
     def isFeasible(self):

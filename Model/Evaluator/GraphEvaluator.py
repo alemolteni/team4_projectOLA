@@ -38,7 +38,9 @@ class GraphEvaluator(Evaluator):
     Compute the probability of visiting a node starting from product i
     """
     def computeSingleProduct(self, product):
-        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=self.verbose)
+        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, 
+                            margins=self.margins, units_mean=self.units_mean, 
+                            conversion_rates=self.conversion_rates, verbose=self.verbose)
         nodes=[firstNode]
         step_probability = np.zeros((len(self.alphas),len(self.alphas)))
         #joint_prob = np.full((len(self.products_list)), 0).tolist()
@@ -66,11 +68,12 @@ class GraphEvaluator(Evaluator):
             for k in range(0,len(existing_nodes)):
                 index = existing_nodes[k].product
                 reached_nodes = reached_nodes + str(index) + "; "
+
                 # existing_nodes[k].computeProbability() is the probability of visiting "index" in (i+1)-steps
                 reaching_probability = existing_nodes[k].computeProbability()
                 step_probability[i+1][index] = reaching_probability
-                #joint_prob[index] += reaching_probability
-            if self.verbose: print("Probability of visiting nodes in at most {}-step from {}: {}".format(i+1, product, joint_prob))
+
+            # if self.verbose: print("Probability of visiting nodes in at most {}-step from {}: {}".format(i+1, product, joint_prob))
             nodes = existing_nodes
 
         # Probability of visiting product is given by:
@@ -83,7 +86,74 @@ class GraphEvaluator(Evaluator):
 
         return cumulative_sum
 
+    """
+    Compute the probability of visiting a node starting from product i
+    """
+    def getRewardSingleProduct(self, product):
+        firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, 
+                            margins=self.margins, units_mean=self.units_mean, 
+                            conversion_rates=self.conversion_rates, verbose=self.verbose)
+        nodes=[firstNode]
+        step_probability = np.zeros((len(self.alphas),len(self.alphas)))
+        step_probability[0][product] = 1
+
+        step_reward = np.zeros((len(self.alphas),len(self.alphas)))
+        step_reward[0][product] = self.conversion_rates[product] * self.units_mean[product] * self.margins[product]
+        # Iterate for #steps times
+        for i in range(0, len(self.products_list)-1):
+            # Next nodes
+            product_nodes = np.full((len(self.products_list)), None)
+            for k in range(0,len(nodes)):
+                node = nodes[k]
+                following = node.expand()
+                for j in range(0,len(following)):
+                    if following[j].isFeasible() == True:
+                        if product_nodes[following[j].product] is not None:
+                            product_nodes[following[j].product].merge(following[j])
+                        else:
+                            product_nodes[following[j].product] = following[j]
+            
+            # Remove None elements
+            existing_nodes = product_nodes[product_nodes != np.array(None)]
+            reached_nodes = ""
+            # if self.verbose: print("Nodes reached from previous step: {} total {}".format(product_nodes, len(existing_nodes)))
+            for k in range(0,len(existing_nodes)):
+                index = existing_nodes[k].product
+                reached_nodes = reached_nodes + str(index) + "; "
+
+                # existing_nodes[k].computeProbability() is the probability of visiting "index" in (i+1)-steps
+                reaching_probability = existing_nodes[k].computeProbability()
+                step_probability[i+1][index] = reaching_probability
+
+                expected_reward = existing_nodes[k].computeExpectedReward()
+                step_reward[i+1][index] = expected_reward
+
+            # if self.verbose: print("Probability of visiting nodes in at most {}-step from {}: {}".format(i+1, product, joint_prob))
+            nodes = existing_nodes
+
+        # Expected reward must be scaled by the probability of a non-visit in earlier steps
+        # E[rew from A] = E[rew 0-step from A] + E[rew 1-step from A]*(1-P(i TO A in 0-step)) ...
+        remaining_prob_space = np.full(len(self.alphas), 1)
+        cumulative_sum = np.full(len(self.alphas), 0)
+        for k in range(0,len(self.alphas)):
+            cumulative_sum = np.add(cumulative_sum, step_reward[k] * remaining_prob_space)
+            remaining_prob_space = remaining_prob_space * (1 - step_probability[k])
+        #print(step_reward)
+        return cumulative_sum.sum()
+
     def computeMargin(self):
+        #expected_rewards = []
+        #for i in range(0,len(self.products_list)):
+        #    expected_rew = self.getRewardSingleProduct(i)
+        #    expected_rewards.append(expected_rew)
+
+        #return np.multiply(expected_rewards, self.alphas).sum()
+
+        all_visit_prob = self.getVisitingProbability()
+        products_profit = all_visit_prob * self.conversion_rates * self.units_mean * self.margins
+        #print(products_profit)
+        return products_profit.sum()
+
         single_margins = np.full((len(self.products_list)), 0)
         for i in range(0,len(self.products_list)):
             visiting_prob = self.computeSingleProduct(i)
