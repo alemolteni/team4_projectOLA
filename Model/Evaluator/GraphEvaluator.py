@@ -34,6 +34,9 @@ class GraphEvaluator(Evaluator):
 
         #if verbose: print(self.y_matrix.weightMatrix)
 
+    """
+    Compute the probability of visiting a node starting from product i
+    """
     def computeSingleProduct(self, product):
         firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=self.verbose)
         nodes=[firstNode]
@@ -87,4 +90,13 @@ class GraphEvaluator(Evaluator):
             #if self.verbose: print("Expected value margin for product {} as starting is {} \n".format(i, single_margins[i]))
         # Weight the single margin by alpha
         return np.multiply(single_margins, self.alphas).sum()
+
+    def getVisitingProbability(self):
+        weighted_visit_prob = np.zeros(len(self.products_list))
+        for i in range(0,len(self.products_list)):
+            visiting_prob = self.computeSingleProduct(i)
+            weighted_visit_prob = weighted_visit_prob + (self.alphas[i] * visiting_prob)
+        
+        return weighted_visit_prob
+
             
