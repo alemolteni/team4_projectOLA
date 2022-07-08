@@ -1,13 +1,7 @@
 import numpy as np
-from Learner.BruteForce import *
-from Learner.UCB.UCB_Step4 import *
-from Model.ConfigurationParametersAverage import mergeUserClasses
-from scipy.stats import gamma
-from Model.Evaluator.GraphEvaluatorMC import *
-import time
 
 
-class GraphEvaluatorMC():
+class GraphEvaluatorMC:
     def __init__(self, products_list, click_prob_matrix, lambda_prob, conversion_rates,
                  alphas, margins, units_mean):
         self.products_list = products_list
@@ -29,7 +23,10 @@ class GraphEvaluatorMC():
         while len(queue) > 0:
             p = queue.pop(0)
             cr = self.conversion_rates[p]
-            bought = np.random.binomial(1, cr)
+            if cr > 1:
+                bought = 1
+            else:
+                bought = np.random.binomial(1, cr)
             if bought == 1:
                 units = np.random.gamma(self.units_mean[p], 1, None)
                 boughtNodes[p] += self.units_mean[p]
@@ -52,14 +49,23 @@ class GraphEvaluatorMC():
         activations = [0] * len(self.alphas)
         alph = np.array(self.alphas) * 20
         alpha = np.cumsum(np.random.dirichlet(alph))
-        for i in range (0, k):
+        for i in range(0, k):
             activations = np.add(activations, self.generateRandomLiveEdgeGraph(alpha))
-        #print(activations)
+        # print(activations)
         return activations / k
 
     def computeMargin(self):
         return np.multiply(self.computeActivationProbability(), self.margins).sum()
+
+
 """
+import numpy as np
+from Learner.BruteForce import *
+from Learner.UCB.UCB_Step4 import *
+from Model.ConfigurationParametersAverage import mergeUserClasses
+from scipy.stats import gamma
+from Model.Evaluator.GraphEvaluatorMC import *
+import time
 #files = ['./Configs/config1.json', './Configs/config2.json','./Configs/config3.json', './Configs/configDump.json', './Configs/configuration4.json', './Configs/configuration5.json']
 files = ['./Configs/config2.json']
 env = []

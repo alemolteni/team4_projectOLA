@@ -1,4 +1,4 @@
-from Learner.UCB.UCB_Step3 import *
+from Learner.UCB.UCB_Step3 import UCB_Step3
 import numpy as np
 
 

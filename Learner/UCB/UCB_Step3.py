@@ -1,6 +1,6 @@
+from Model.Evaluator.GraphEvaluator import GraphEvaluator
 import numpy as np
 import math
-from Model.Evaluator.GraphEvaluator import *
 
 
 class UCB_Step3():
