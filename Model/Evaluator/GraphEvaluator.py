@@ -40,8 +40,10 @@ class GraphEvaluator(Evaluator):
     def computeSingleProduct(self, product):
         firstNode = StepNode(product, [np.array([], dtype=int)], graph_prob=self.y_matrix, verbose=self.verbose)
         nodes=[firstNode]
-        joint_prob = np.full((len(self.products_list)), 0).tolist()
-        joint_prob[product] = 1
+        step_probability = np.zeros((len(self.alphas),len(self.alphas)))
+        #joint_prob = np.full((len(self.products_list)), 0).tolist()
+        #joint_prob[product] = 1
+        step_probability[0][product] = 1
         # Iterate for #steps times
         for i in range(0, len(self.products_list)-1):
             # Next nodes
@@ -66,11 +68,20 @@ class GraphEvaluator(Evaluator):
                 reached_nodes = reached_nodes + str(index) + "; "
                 # existing_nodes[k].computeProbability() is the probability of visiting "index" in (i+1)-steps
                 reaching_probability = existing_nodes[k].computeProbability()
-                joint_prob[index] += reaching_probability
+                step_probability[i+1][index] = reaching_probability
+                #joint_prob[index] += reaching_probability
             if self.verbose: print("Probability of visiting nodes in at most {}-step from {}: {}".format(i+1, product, joint_prob))
             nodes = existing_nodes
-        # Probability of visiting product
-        return  np.array(joint_prob)
+
+        # Probability of visiting product is given by:
+        # P(A->B) = P(AB in 1-step) + P(AB in 2-step)*(1-P(AB in 1-step)) ...
+        remaining_prob_space = np.full(len(self.alphas), 1)
+        cumulative_sum = np.full(len(self.alphas), 0)
+        for k in range(0,len(self.alphas)):
+            cumulative_sum = np.add(cumulative_sum, step_probability[k] * remaining_prob_space)
+            remaining_prob_space = remaining_prob_space * (1 - step_probability[k])
+
+        return cumulative_sum
 
     def computeMargin(self):
         single_margins = np.full((len(self.products_list)), 0)
