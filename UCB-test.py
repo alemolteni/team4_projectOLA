@@ -59,7 +59,7 @@ for i in range(0, len(files)):
     actual_unit_mean.append(config["actual_units_mean"])
 
 for ucb in range(3, 7):
-    n_experiments = 5000
+    n_experiments = 100
     fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
     if ucb == 6:
         plt.suptitle("UCB sliding window")
