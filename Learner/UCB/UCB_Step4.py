@@ -30,7 +30,8 @@ class UCB_Step4(UCB_Step3):
             upper_deviation_alpha = np.sqrt(np.divide(log_time_single, self.times_arms_pulled_for_alphas))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
-            self.upper_bound_alphas = np.add(self.alphas, upper_deviation_alpha)
+            self.upper_bound_alphas = self.alphas  # np.add(self.alphas, upper_deviation_alpha)
+            # ToDo: should compute UCB for alphas?
 
             self.expected_reward = self.compute_expected_reward()
 
@@ -101,7 +102,7 @@ class UCB_Step4(UCB_Step3):
             armMargins.append(self.margins[k][test_config[k]])
             armConvRates.append(self.upper_bound_cr[k][test_config[k]])
 
-        #Units mean doesn't need an upper bound since it doesn't depend on the price of the product
+        # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
         graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
                                    lambda_prob=self.Lambda, alphas=self.upper_bound_alphas, conversion_rates=armConvRates,
                                    margins=armMargins,

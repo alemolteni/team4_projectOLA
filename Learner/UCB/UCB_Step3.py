@@ -35,8 +35,6 @@ class UCB_Step3():
         self.expected_reward = np.full((self.num_products, self.num_prices), 0.0)
         self.margins = margins.copy()
         self.units_mean = units_mean.copy()
-
-        self.S = 1
         self.upper_bound_cr = np.zeros((self.num_products, self.num_prices))
 
     def pull_arm(self):
