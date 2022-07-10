@@ -1,6 +1,6 @@
 {
   "Description": "3 classes with click probability of 0 and very different CR",
-  "optimalMargin": 9.86152857142857,
+  "optimalMargin": 9.888329714285712,
   "optimalConfig": [1, 1, 1, 1, 1],
   "margins": [
     [6, 10, 14, 18],
