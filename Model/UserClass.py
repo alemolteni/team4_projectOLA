@@ -71,9 +71,9 @@ class UserClass:
         Lambda : float
             Probability to see the second secondary product given that the first one is seen, i.e. P(see sec(i,2) | see sec(i,1)) = Lambda
         
-        features_generator : vector[dict["name","probability"]]
-            Binary features generator in which probability is P(bin_feat=1), it's an array of dict like this: [{"name":"Tall >180cm","probability":0.2}]
-        
+        features_generator : vector[dict["name","value"]]
+            Binary feature value.
+
         debug : bool
             Print additional information about the execution
         """
@@ -105,13 +105,15 @@ class UserClass:
         self.currentPrice = [0 for i in range(0,len(self.alphas))]
         self.units_gamma_shape = units_gamma_shape
         self.debug = debug
-        
-        self.features_prob = []
+
+        self.features = features_generator
+        self.features_values = []
         self.features_names = []
-        for i in range(0,len(features_generator)):
-            self.features_prob.append(features_generator[i]["probability"])
+        for i in range(0, len(features_generator)):
+            self.features_values.append(features_generator[i]["probability"])
             self.features_names.append(features_generator[i]["name"])
-        self.features_prob = np.array(self.features_prob)
+        if self.debug: print(self.features_values, self.features_names)
+        # self.features_prob = np.array(self.features_prob)
 
     def generateEpisode(self):
         # For a user simulate the interaction with the website, returning clicks and currentProduct bought
@@ -128,7 +130,7 @@ class UserClass:
         self.history[currentProduct] = 0
 
         userInteractions = self.generateProductInteraction(currentProduct)
-        userInteractions.setFeatures(self.features_names, self.generateFeature())
+        userInteractions.setFeatures(self.features_names, self.features_values)
         return userInteractions
 
     def generateNewAlphas(self):

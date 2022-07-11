@@ -31,7 +31,7 @@
       "unitsScale": 1,
       "usersMean": 50,
       "usersVariance": 1,
-      "features": [{"name":"Over 18","probability":0.6},{"name":"Male","probability":0.9}]
+      "features": [{"name":"Over 18","probability":0},{"name":"Male","probability":0}]
     },{
         "lambda": 0.8,
         "alphas": [0.1, 0.2, 0.3, 0.3, 0.1],
@@ -55,7 +55,7 @@
         "unitsScale": 1,
         "usersMean": 25,
         "usersVariance": 1,
-        "features": [{"name":"Young","probability":0.7},{"name":"Female","probability":0.5}]
+        "features": [{"name":"Over 18","probability":0},{"name":"Male","probability":1}]
       },{
         "lambda": 0.8,
         "alphas": [0.2, 0.1, 0.1, 0.5, 0.1],
@@ -79,7 +79,7 @@
         "unitsScale": 1,
         "usersMean": 20,
         "usersVariance": 1,
-        "features": [{"name":"Adult","probability":0.3},{"name":"","probability":1}]
+        "features": [{"name":"Over 18","probability":1},{"name":"Male","probability":0.8}]
       }]
   
   }

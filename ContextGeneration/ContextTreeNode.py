@@ -46,9 +46,10 @@ class ContextTreeNode:
     def can_split(self):
         return len(self.split_features) < len(self.features_names)
 
-
+"""
 paolo = ContextTreeNode(features_names=['a', 'b'], learner=None)
 paolo.split('a', None, None)
 paola = paolo.left
 paola.split('b', None, None)
 print(paolo)
+"""

@@ -5,6 +5,7 @@ from Learner.UCB.UCB_SlidingWindow import UCB_SlidingWindow
 from Model.ConfigurationParametersAverage import mergeUserClasses
 from Environment import Environment
 from Model.Evaluator.GraphEvaluator import GraphEvaluator
+from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -75,6 +76,7 @@ for ucb in range(3, 7):
 
         learner_graph_margins = np.array([])
         learner_env_margins = np.array([])
+        multiEval = MultiClassEvaluator(config_path=files[i])
 
         for j in range(0, n_experiments):
             single_margin = 0
@@ -96,7 +98,7 @@ for ucb in range(3, 7):
 
             env[i].setPriceLevels(pulledArm)
             interactions = env[i].round()
-            single_margin = graphEval.computeMargin()
+            single_margin = multiEval.computeMargin(pulledArm)
 
             env_margin = 0
             for k in range(0, len(interactions)):
@@ -119,7 +121,7 @@ for ucb in range(3, 7):
                                    alphas=alphas[i], conversion_rates=armConvRates, margins=armMargins,
                                    units_mean=actual_unit_mean[i], verbose=False, convert_units=False)
 
-        opt_margin = graphEval.computeMargin()
+        opt_margin = multiEval.computeMargin(opt_arms)
         optimal = np.full(n_experiments, opt_margin)
 
         x = np.linspace(0, n_experiments, n_experiments)

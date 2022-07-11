@@ -26,9 +26,54 @@ class Environment:
             conf_classes = config["classes"]
             for uc in conf_classes:
                 productList = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
-                self.classes.append(UserClass(conversionRate=uc["conversionRates"], clickProbability=GraphProbabilities(uc["clickProbability"]), alphas=uc["alphas"],
-                              Lambda=uc["lambda"], n_user_mean=uc["usersMean"], n_user_variance=uc["usersVariance"], productList=productList,
-                              features_generator=uc["features"], units_gamma_shape=uc["unitsShape"]))
+                if uc["features"][0]["probability"] != 1 and uc["features"][0]["probability"] != 0:
+                    # Split the class on the first feature
+                    weights = uc["features"][0]["probability"]
+                    uc["features"][0]["probability"] = 1
+                    self.classes.append(UserClass(conversionRate=uc["conversionRates"],
+                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  alphas=uc["alphas"],
+                                                  Lambda=uc["lambda"], n_user_mean=uc["usersMean"]*weights,
+                                                  n_user_variance=uc["usersVariance"], productList=productList,
+                                                  features_generator=uc["features"],
+                                                  units_gamma_shape=uc["unitsShape"]))
+
+                    uc["features"][0]["probability"] = 0
+                    self.classes.append(UserClass(conversionRate=uc["conversionRates"],
+                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  alphas=uc["alphas"],
+                                                  Lambda=uc["lambda"], n_user_mean=uc["usersMean"]*(1-weights),
+                                                  n_user_variance=uc["usersVariance"], productList=productList,
+                                                  features_generator=uc["features"],
+                                                  units_gamma_shape=uc["unitsShape"]))
+                elif uc["features"][1]["probability"] != 1 and uc["features"][1]["probability"] != 0:
+                    # Split the class on the second feature
+                    weights = uc["features"][1]["probability"]
+                    uc["features"][1]["probability"] = 1
+                    self.classes.append(UserClass(conversionRate=uc["conversionRates"],
+                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  alphas=uc["alphas"],
+                                                  Lambda=uc["lambda"], n_user_mean=uc["usersMean"] * weights,
+                                                  n_user_variance=uc["usersVariance"], productList=productList,
+                                                  features_generator=uc["features"],
+                                                  units_gamma_shape=uc["unitsShape"]))
+
+                    uc["features"][1]["probability"] = 0
+                    self.classes.append(UserClass(conversionRate=uc["conversionRates"],
+                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  alphas=uc["alphas"],
+                                                  Lambda=uc["lambda"], n_user_mean=uc["usersMean"] * (1 - weights),
+                                                  n_user_variance=uc["usersVariance"], productList=productList,
+                                                  features_generator=uc["features"],
+                                                  units_gamma_shape=uc["unitsShape"]))
+                else:
+                    self.classes.append(UserClass(conversionRate=uc["conversionRates"],
+                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  alphas=uc["alphas"],
+                                                  Lambda=uc["lambda"], n_user_mean=uc["usersMean"],
+                                                  n_user_variance=uc["usersVariance"], productList=productList,
+                                                  features_generator=uc["features"],
+                                                  units_gamma_shape=uc["unitsShape"]))
 
         assert len(self.classes) > 0
         self.n_product = len(self.classes[0].alphas)
@@ -49,7 +94,24 @@ class Environment:
         self.price_levels = price_levels
         for userClass in self.classes:
             userClass.setCurrentPrice(price_levels)
-            
+
+    def setPriceLevelsForContexts(self, price_levels_for_features):
+        if len(price_levels_for_features) == 1:
+            self.setPriceLevels(price_levels_for_features[0][0])
+        else:
+            for i in range(0, len(price_levels_for_features)):
+                split_feature = price_levels_for_features[i][1]
+                for uc in self.classes:
+                    compliant = True
+                    for f in split_feature:
+                        for j in range(0, len(uc.features_names)):
+                            if uc.features_names[j] == f:
+                                idx = j
+                        if uc.features_values[idx] != split_feature[f]:
+                            compliant = False
+                    if compliant:
+                        uc.setCurrentPrice(price_levels_for_features[i][0])
+
     def round(self):
         """
         Generate a new set of data for the current days, according to the arrival rate of the classes.

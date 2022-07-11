@@ -31,7 +31,7 @@
       "actualUnitsMean": [1.38, 1.78, 2.11, 2.59, 1.52],
       "usersMean": 100,
       "usersVariance": 15,
-      "features": [{"name":"Over 18","probability":0.6},{"name":"Male","probability":0.9}]
+      "features": [{"name":"Over 18","probability":1},{"name":"Male","probability":1}]
     }]
   
   }
