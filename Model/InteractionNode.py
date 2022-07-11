@@ -156,6 +156,39 @@ class InteractionNode:
             margin += foll.linearizeMargin(marginPerPrice)
         return margin
 
+    def linearizeSecondaryOpening(self):
+        secOp = np.full((self.num_products, self.num_products), 0)
+        secOp[self.product][self.firstSlot] = self.sec1Opened
+        secOp[self.product][self.secondSlot] = self.sec2Opened
+        # print("Current LIN#UNITS: {}".format(uu))
+        for next in self.following:
+            secOp = np.add(secOp,next.linearizeSecondaryOpening())
+        return secOp
+
+    def linearizePossibleSecondaryOpening(self, already_opened=None):
+        if already_opened is None:
+            already_opened = [self.product]
+        secPossibleOp = np.full((self.num_products, self.num_products), 0)
+
+        queue = [self]
+        while len(queue) > 0:
+            curr = queue.pop(0)
+            for next in self.following:
+                if (next.product not in already_opened):
+                    queue.append(next)
+
+            if (curr.firstSlot not in already_opened):
+                secPossibleOp[curr.product][curr.firstSlot] = curr.bought
+                if (curr.sec1Opened == 1):
+                    already_opened.append(curr.firstSlot)
+
+            if (curr.secondSlot not in already_opened):
+                secPossibleOp[curr.product][curr.secondSlot] = curr.bought
+                if (curr.sec2Opened == 1):
+                    already_opened.append(curr.secondSlot)
+        
+        return secPossibleOp
+
     def linearizeFollowingVisits(self):  # Written for step 5, now not in use
         clickMatrix = np.zeros((self.num_products, 4))
         # [j][0] = 1 if clicked only first
