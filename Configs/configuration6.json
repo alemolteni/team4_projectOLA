@@ -1,6 +1,7 @@
 {
-    "optimalMargin": 9.363157894736842,
-    "optimalConfig": [0, 0, 0, 0, 0],
+    "optimalMargin": 14.373466666666669,
+    "optimalContextual": 18.3112,
+    "optimalConfig": [3, 3, 3, 2, 3],
     "margins": [
       [1, 6, 10, 50],
       [1, 6, 10, 50],
