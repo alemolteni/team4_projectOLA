@@ -13,12 +13,12 @@ from tqdm import tqdm
 from IPython.display import clear_output
 
 # ======== TUNABLE PARAMETERS ===========
-n_experiments = 200
+n_experiments = 300
 
 # Step 3 = "TS_CR" ==> Uncertain Conversion Rates
 # Step 4 = "TS_Alphas" ==> Uncertain CRates, Alphas, #Units
 # Step 5 = "TS_GW" ==> Uncertain CRates, Graph Weights
-learner = "TS_Alphas"
+learner = "TS_GW"
 
 # =======================================
 
@@ -33,9 +33,9 @@ def get_learner(name="TS_CR", margins=None, alphas=None, secondary_prod=None, cl
         return TS_GW(margins=margins, alphas=alphas, secondary_prod=secondary_prod, 
                      units_mean=units_mean, l=l)
 
-#files = ['./Configs/config1.json', './Configs/config2.json','./Configs/config3.json', './Configs/configuration4.json', './Configs/configuration5.json']
+files = ['./Configs/config1.json', './Configs/config2.json','./Configs/config3.json', './Configs/configuration4.json', './Configs/configuration5.json']
 
-files = ['./Configs/config1.json', './Configs/config2.json']
+# files = ['./Configs/config1.json', './Configs/config2.json']
 
 envs = []
 mc_evals = []
