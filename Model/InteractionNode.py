@@ -9,7 +9,7 @@ class InteractionNode:
     the user on the site
     """
 
-    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Opened, sec2Opened, num_products=5, price_levels=None):
+    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Opened, sec2Opened, sec1CanBeOpened, sec2CanBeOpened, num_products=5, price_levels=None):
         """
         Each interaction node keeps track of:
         - product: id of the product type involved in the interaction;
@@ -31,8 +31,12 @@ class InteractionNode:
         self.featuresValues = []
         self.firstSlot = firstSlot
         self.secondSlot = secondSlot
+        assert sec1Opened <= sec1CanBeOpened
+        assert sec2Opened <= sec2CanBeOpened
         self.sec1Opened = sec1Opened
         self.sec2Opened = sec2Opened
+        self.sec1CanBeOpened = sec1CanBeOpened
+        self.sec2CanBeOpened = sec2CanBeOpened
         self.num_products = num_products
         self.price_levels = price_levels
 
@@ -167,28 +171,13 @@ class InteractionNode:
         return secOp
 
     def linearizePossibleSecondaryOpening(self, already_opened=None):
-        if already_opened is None:
-            already_opened = [self.product]
-        secPossibleOp = np.full((self.num_products, self.num_products), 0)
+        secOp = np.full((self.num_products, self.num_products), 0)
+        secOp[self.product][self.firstSlot] = self.sec1CanBeOpened
+        secOp[self.product][self.secondSlot] = self.sec2CanBeOpened
 
-        queue = [self]
-        while len(queue) > 0:
-            curr = queue.pop(0)
-            for next in self.following:
-                if (next.product not in already_opened):
-                    queue.append(next)
-
-            if (curr.firstSlot not in already_opened):
-                secPossibleOp[curr.product][curr.firstSlot] = curr.bought
-                if (curr.sec1Opened == 1):
-                    already_opened.append(curr.firstSlot)
-
-            if (curr.secondSlot not in already_opened):
-                secPossibleOp[curr.product][curr.secondSlot] = curr.bought
-                if (curr.sec2Opened == 1):
-                    already_opened.append(curr.secondSlot)
-        
-        return secPossibleOp
+        for next in self.following:
+            secOp = np.add(secOp,next.linearizePossibleSecondaryOpening())
+        return secOp
 
     def linearizeFollowingVisits(self):  # Written for step 5, now not in use
         clickMatrix = np.zeros((self.num_products, 4))

@@ -181,6 +181,9 @@ class UserClass:
             sec1Opened = 0
             sec2Opened = 0
 
+            sec1CanBeOpened = 0
+            sec2CanBeOpened = 0
+
             following = []
 
             # If the primary product displayed is bought that the click probability of the two linked secondary products
@@ -197,6 +200,7 @@ class UserClass:
                 # has to be multiplied by the factor 'Lambda'
                 clickProbSec1 = self.clickProbability.getEdgeProbability(currentProduct, firstSlot) * self.history[
                     firstSlot]
+                sec1CanBeOpened = self.history[firstSlot]
 
                 # variable 'sec1Bought' is the outcome of the binomial (number of successful trials): if the product is
                 # bought rnd will be equal to 1 the same applies for variable 'sec2Bought'
@@ -209,6 +213,8 @@ class UserClass:
 
                 clickProbSec2 = self.clickProbability.getEdgeProbability(currentProduct, secondSlot) * self.Lambda * \
                                 self.history[secondSlot]
+                sec2CanBeOpened = self.history[secondSlot]
+
                 sec2Opened = np.random.binomial(1, clickProbSec2)
                 if sec2Opened == 1:
                     self.history[secondSlot] = 0
@@ -219,7 +225,8 @@ class UserClass:
             # keep track of the user history
             interactionNode = InteractionNode(product=currentProduct, price=self.currentPrice[currentProduct],
                                               firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
-                                              sec2Opened=sec2Opened, bought=bought, units=units, following=following,
+                                              sec2Opened=sec2Opened, sec1CanBeOpened=sec1CanBeOpened, 
+                                              sec2CanBeOpened=sec2CanBeOpened, bought=bought, units=units, following=following,
                                               num_products=len(self.alphas))
             visitingOrder.append(interactionNode)
 
