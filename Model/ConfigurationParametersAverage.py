@@ -30,6 +30,7 @@ def mergeUserClasses(PathList, debug):
 
         # Fixed parameters for all classes:
         optimalMargin = configuration["optimalMargin"]
+        optimalContextual = configuration["optimalContextual"]
         optimalConfig = configuration["optimalConfig"]
         margins = configuration["margins"]
         productList = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
@@ -102,6 +103,7 @@ def mergeUserClasses(PathList, debug):
             "configurationPath": c_path,
             "productList": productList,
             "optimalMargin": optimalMargin,
+            "optimalContextual": optimalContextual,
             "optimalConfig": optimalConfig,
             "marginsPerPrice": margins, 
             "lambda_p": Lambda,

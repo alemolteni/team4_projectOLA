@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
 
-files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
-         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+#files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
+#         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+files = ['./Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
 env = []
 config_margins = []
 optimal_arms = []
@@ -20,6 +21,7 @@ lambdas = []
 alphas = []
 units_means = []
 clairvoyant_opt_rew = []
+clairvoyant_opt_context = []
 actual_unit_mean = []
 features_names = []
 
@@ -37,6 +39,7 @@ for i in range(0, len(files)):
     lambdas.append(config['lambda_p'])
     alphas.append(config["alphas"])
     clairvoyant_opt_rew.append(config["optimalMargin"])
+    clairvoyant_opt_context.append(config["optimalContextual"])
     units_means.append(config["units_mean"])
     actual_unit_mean.append(config["actual_units_mean"])
 
@@ -49,11 +52,15 @@ for i in range(0, len(env)):
     print("Running config: ", config_name)
     learner = ContextualLearner(margins=config_margins[i], clickProbability=click_probs[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                features_names=features_names[i], approach='ts')
+                                features_names=features_names[i], approach='ucb')
     multiEvaluator = MultiClassEvaluator(config_path=files[i])
     learner_graph_margins = []
+    time_first_split = 0
     for j in range(0, n_experiments):
         arms = learner.pull_arm()
+        if len(arms) > 1 and time_first_split == 0:
+            time_first_split = j
+            print("Time first split = {}".format(time_first_split))
         env[i].setPriceLevelsForContexts(arms)
         interaction = env[i].round()
         learner.update(interaction)
@@ -61,8 +68,13 @@ for i in range(0, len(env)):
 
     print(learner.tree)
 
+    non_contextual = np.full(time_first_split, clairvoyant_opt_rew[i])
+    contextual = np.full(n_experiments - time_first_split, clairvoyant_opt_context[i])
+    optimal_possible = np.hstack([non_contextual, contextual])
+
     x = np.linspace(0, n_experiments, n_experiments)
     axes[i, 0].plot(x, learner_graph_margins)
+    axes[i, 0].plot(x, optimal_possible)
     # axes[i, 0].plot(x, learner_env_margins)
     axes[i, 0].set_xlabel("Time step")
     axes[i, 0].set_ylabel("Margins\n{}".format(config_name))
@@ -71,7 +83,7 @@ for i in range(0, len(env)):
     cum_rews_graph = np.cumsum(learner_graph_margins)
     avg_cum_rews_graph = np.divide(cum_rews_graph, np.arange(1, n_experiments + 1))
     axes[i, 1].plot(x, avg_cum_rews_graph)
-
+    axes[i, 1].plot(x, optimal_possible)
     axes[i, 1].set_xlabel("Time step")
     axes[i, 1].set_ylabel("Cumulative margins")
     axes[0, 1].set_title("Average reward")
