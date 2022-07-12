@@ -9,7 +9,7 @@ class InteractionNode:
     the user on the site
     """
 
-    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Opened, sec2Opened, num_products=5):
+    def __init__(self, product, price, bought, units, following, firstSlot, secondSlot, sec1Opened, sec2Opened, num_products=5, price_levels=None):
         """
         Each interaction node keeps track of:
         - product: id of the product type involved in the interaction;
@@ -34,6 +34,7 @@ class InteractionNode:
         self.sec1Opened = sec1Opened
         self.sec2Opened = sec2Opened
         self.num_products = num_products
+        self.price_levels = price_levels
 
     def setFeatures(self, featuresNames, featuresValues):
         self.featuresNames = featuresNames

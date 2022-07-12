@@ -15,8 +15,21 @@ class TS_Alphas(TS_CR):
 
         self.alphas = np.full(self.num_products, 1/self.num_products)
         self.units_mean = np.full(self.num_products, 1)
+        self.secondary_prod = secondary_prod
 
     # alphas parameters are treated as the mean of a beta distribution
+
+    def pull_arm(self):
+        arm = super(TS_Alphas, self).pull_arm()
+
+        log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
+        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
+                                               out=np.full_like(log_time_double, 0, dtype=float),
+                                               where=self.times_arms_pulled > 0))
+        self.lower_bound_cr = np.subtract(self.used_conv_rates, lower_deviation_cr)
+        self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
+
+        return arm
 
     def update(self, interactions):
         # From daily interactions extract needed information, depending on step uncertainty:
@@ -36,3 +49,38 @@ class TS_Alphas(TS_CR):
         self.units_mean = np.divide(self.units_cumulative, self.total_times_bought, 
                                     out=np.full_like(self.units_cumulative, 1), where=self.total_times_bought!=0)
         return
+
+    def batch_update(self, interactions):
+        for inter in interactions:
+            self.configuration = inter.price_levels
+            assert len(self.configuration) is not None
+            super(TS_Alphas, self).update([inter])
+
+    def compute_product_margin_lower_bound(self):
+        self.pull_arm()  # Update the optimal configuration
+        self.t -= 1  # Don't count the pull of the arm as a step
+        exp_rewards = np.zeros((self.num_products, self.num_prices))
+        for i in range(0, self.num_products):
+            for j in range(0, self.num_prices):
+                test_config = self.configuration
+                test_config[i] = j
+
+                armMargins = []
+                armConvRates = []
+                # print(self.lower_bound_cr)
+                # print(self.times_arms_pulled)
+                for k in range(0, len(test_config)):
+                    armMargins.append(self.margins[k][test_config[k]])
+                    armConvRates.append(self.lower_bound_cr[k][test_config[k]])
+
+                # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
+                graphEval = GraphEvaluator(products_list=self.secondary_prod, click_prob_matrix=self.click_prob,
+                                           lambda_prob=self.l, alphas=self.alphas,
+                                           conversion_rates=armConvRates,
+                                           margins=armMargins,
+                                           units_mean=self.units_mean, verbose=False, convert_units=False)
+                margin = graphEval.computeMargin()
+
+                exp_rewards[i, j] = margin
+        # return the best margin testing configuration using a heuristic
+        return np.max(exp_rewards)

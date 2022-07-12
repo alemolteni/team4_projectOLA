@@ -41,7 +41,7 @@ for i in range(0, len(files)):
     actual_unit_mean.append(config["actual_units_mean"])
 
 
-n_experiments = 100
+n_experiments = 200
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
 
 for i in range(0, len(env)):
@@ -49,7 +49,7 @@ for i in range(0, len(env)):
     print("Running config: ", config_name)
     learner = ContextualLearner(margins=config_margins[i], clickProbability=click_probs[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                features_names=features_names[i])
+                                features_names=features_names[i], approach='ts')
     multiEvaluator = MultiClassEvaluator(config_path=files[i])
     learner_graph_margins = []
     for j in range(0, n_experiments):

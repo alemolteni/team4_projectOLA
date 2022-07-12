@@ -14,6 +14,7 @@ class TS:
         self.conversion_rates_distro = np.full((num_products, num_prices, 2), 1)
         self.used_conv_rates = np.full((self.num_products, self.num_prices), 0, dtype=float)
         self.configuration = np.zeros((num_products), dtype=int)
+        self.times_arms_pulled = np.full((num_products, num_prices), 0.0)
 
     def pull_arm(self):
         # Choose arm with higher reward w.r.t. generated conversion rates
@@ -26,6 +27,8 @@ class TS:
         # XXX must be the expected reward and must be computed for each product and price level
         self.expected_reward = self.compute_expected_rewards()
         self.configuration = np.argmax(self.expected_reward, axis=1)
+        for i in range(0, self.num_products):
+            self.times_arms_pulled[i][self.configuration[i]] += 1
         # print(self.expected_reward)
         return self.configuration
 

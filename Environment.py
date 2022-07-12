@@ -131,5 +131,7 @@ class Environment:
             dailyUsers = math.ceil(np.random.normal(userClass.n_user[0], userClass.n_user[1]))
             userClass.generateNewAlphas()
             for i in range(0,dailyUsers):
-                episodes.append(userClass.generateEpisode())
+                ep = userClass.generateEpisode()
+                ep.price_levels = self.price_levels
+                episodes.append(ep)
         return  episodes
