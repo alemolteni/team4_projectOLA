@@ -54,7 +54,7 @@ class TS_Alphas(TS_CR):
         for inter in interactions:
             self.configuration = inter.price_levels
             assert len(self.configuration) is not None
-            super(TS_Alphas, self).update([inter])
+            self.update([inter])
 
     def compute_product_margin_lower_bound(self):
         self.pull_arm()  # Update the optimal configuration
