@@ -132,7 +132,6 @@ class UserClass:
         self.history[currentProduct] = 0
 
         userInteractions = self.generateProductInteraction(currentProduct)
-        userInteractions.setFeatures(self.features_names, self.features_values)
         return userInteractions
 
     def generateNewAlphas(self):
@@ -230,6 +229,7 @@ class UserClass:
                                               sec2Opened=sec2Opened, sec1CanBeOpened=sec1CanBeOpened, 
                                               sec2CanBeOpened=sec2CanBeOpened, bought=bought, units=units, following=following,
                                               num_products=len(self.alphas))
+            interactionNode.setFeatures(self.features_names, self.features_values)
             visitingOrder.append(interactionNode)
 
         # Transforming visiting order in a linked list

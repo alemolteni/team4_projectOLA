@@ -33,7 +33,7 @@ class ContextualLearner:
         self.t = 0
         self.samples = []
 
-    # Return a weighted average of the click probability for the specified context: [{feature: value}]
+    # Return a weighted average of the click probability for the specified context: {feature: value}
     def weight_click_probs(self, context):
         #print(context)
         cp = np.zeros((self.num_products, self.num_products), dtype=np.float)
@@ -145,12 +145,14 @@ class ContextualLearner:
                 right_split_probabilities = len(right_split_samples) / len(samples)
                 right_split_probabilities_lb = right_split_probabilities - np.sqrt(-np.log(0.95) / (2*len(right_split_samples)))
 
+            # print(len(samples), len(left_split_samples), len(right_split_samples))
             if len(samples) != 0 and len(left_split_samples) != 0 and len(right_split_samples) != 0:
                 assert left_split_probabilities + right_split_probabilities == 1
 
 
-            #print("How many samples: ", len(left_split_samples), len(right_split_samples), len(samples))
-            new_leaf_split_r = new_leaf_split_l = copy.deepcopy(leaf.split_features)
+            # print("How many samples: ", len(left_split_samples), len(right_split_samples), len(samples))
+            new_leaf_split_r = copy.deepcopy(leaf.split_features)
+            new_leaf_split_l = copy.deepcopy(leaf.split_features)
             new_leaf_split_l[feature] = 0
             new_leaf_split_r[feature] = 1
 

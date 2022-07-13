@@ -25,20 +25,12 @@ class UCB_Step4(UCB_Step3):
         # Choose the arm with the highest upper bound
         else:
             log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-            log_time_single = np.full(self.num_products, 2 * math.log(self.t), dtype=float)
             upper_deviation_cr = np.sqrt(np.divide(log_time_double, self.times_arms_pulled,
-                                                out=np.full_like(log_time_double, 0, dtype=float),
-                                                where=self.times_arms_pulled > 0))
-            lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
-                                                out=np.full_like(log_time_double, 0, dtype=float),
+                                                out=np.full_like(log_time_double, np.inf, dtype=float),
                                                 where=self.times_arms_pulled > 0))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
-            self.lower_bound_cr = np.subtract(self.conversion_rates, lower_deviation_cr)
-            self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
-
             self.expected_reward = self.compute_expected_reward()
-
             self.configuration = np.argmax(self.expected_reward, axis=1)
 
         if self.debug:
@@ -106,13 +98,18 @@ class UCB_Step4(UCB_Step3):
         started = np.full(self.num_products, 0)
         bought = np.zeros(self.num_products)
         num_units = np.full(self.num_products, 0)
-        # ToDo: check if this is correct
+
         for inter in interactions:
-            self.times_arms_pulled[inter.product][inter.price] += 1
-            bought_per_price[inter.product][inter.price] += inter.bought
             started = np.add(started, inter.linearizeStart())
             bought = np.add(bought, inter.linearizeBought())
             num_units = np.add(num_units, inter.linearizeNumUnits())
+
+        for inter in interactions:
+            self.times_arms_pulled[inter.product][inter.price] += 1
+            bought_per_price[inter.product][inter.price] += inter.bought
+            # Expand
+            for next in inter.following:
+                interactions.append(next)
 
         self.times_arms_pulled_for_alphas += sum(started)
         self.times_arms_pulled_for_units = np.add(self.times_arms_pulled_for_units, bought)
@@ -144,8 +141,13 @@ class UCB_Step4(UCB_Step3):
         return margin
 
     def compute_product_margin_lower_bound(self):
-        self.pull_arm()  # Update the optimal configuration
-        self.t -= 1  # Don't count the pull of the arm as a step
+        log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
+        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
+                                               out=np.full_like(log_time_double, 0, dtype=float),
+                                               where=self.times_arms_pulled > 0))
+        self.lower_bound_cr = np.subtract(self.conversion_rates, lower_deviation_cr)
+        self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
+
         exp_rewards = np.zeros((self.num_products, self.num_prices))
         for i in range(0, self.num_products):
             for j in range(0, self.num_prices):

@@ -14,10 +14,10 @@ from tqdm import tqdm
 from IPython.display import clear_output
 import json
 
-
-#files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json',
-#         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
-files = ['./Configs/config2.json', './Configs/configuration5.json', './Configs/configuration6.json']
+np.seterr(all='raise')
+files = ['./Configs/config2.json', './Configs/config3.json',
+         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+#files = ['./Configs/config2.json', './Configs/configuration5.json', './Configs/configuration6.json']
 approach = 'ucb'
 
 env = []
@@ -70,7 +70,7 @@ plt.suptitle("Contextual using " + approach + " approach")
 used_learners = []
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
-    # print("Running config: ", config_name)
+    print("Running config: ", config_name)
     learner = ContextualLearner(margins=config_margins[i], clickProbability=cp_class_per_env[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
                                 features_names=features_names[i], approach=approach)
@@ -97,6 +97,9 @@ for i in range(0, len(env)):
 
     print(learner.tree)
     print("Time first split is ", time_first_split)
+
+    for leaf in learner.tree.get_leaves():
+        print(leaf.split_features, leaf.learner.pull_arm())
 
     non_contextual = np.full(time_first_split, clairvoyant_opt_rew[i])
     contextual = np.full(n_experiments - time_first_split, clairvoyant_opt_context[i])
