@@ -98,8 +98,6 @@ class Environment:
         self.n_product = len(self.classes[0].alphas)
         self.price_levels = np.full((self.n_product), 1, dtype=int)
 
-        print(self.userClassChanges)
-
 
     def addTimeListener(self, fireAt, fireFunction):
         """
