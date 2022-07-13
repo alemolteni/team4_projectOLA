@@ -19,6 +19,7 @@ class Environment:
         self.t = 0
         self.listener = []
         self.listener_timing = np.array([], dtype=int)
+        self.userClassChanges = []
         if config_path != None:
             f = open(config_path)
             config = json.load(f)
@@ -46,6 +47,13 @@ class Environment:
                                                   n_user_variance=uc["usersVariance"], productList=productList,
                                                   features_generator=uc["features"],
                                                   units_gamma_shape=uc["unitsShape"]))
+                    if "change" in uc:
+                        self.userClassChanges.append(uc["change"])
+                        self.userClassChanges.append(uc["change"])
+                    else:
+                        self.userClassChanges.append({"step": -1})
+                        self.userClassChanges.append({"step": -1})
+
                 elif uc["features"][1]["probability"] != 1 and uc["features"][1]["probability"] != 0:
                     # Split the class on the second feature
                     weights = uc["features"][1]["probability"]
@@ -66,6 +74,13 @@ class Environment:
                                                   n_user_variance=uc["usersVariance"], productList=productList,
                                                   features_generator=uc["features"],
                                                   units_gamma_shape=uc["unitsShape"]))
+                    if "change" in uc:
+                        self.userClassChanges.append(uc["change"])
+                        self.userClassChanges.append(uc["change"])
+                    else:
+                        self.userClassChanges.append({"step": -1})
+                        self.userClassChanges.append({"step": -1})
+
                 else:
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
                                                   clickProbability=uc["clickProbability"],
@@ -74,10 +89,16 @@ class Environment:
                                                   n_user_variance=uc["usersVariance"], productList=productList,
                                                   features_generator=uc["features"],
                                                   units_gamma_shape=uc["unitsShape"]))
+                    if "change" in uc:
+                        self.userClassChanges.append(uc["change"])
+                    else:
+                        self.userClassChanges.append({"step": -1})
 
         assert len(self.classes) > 0
         self.n_product = len(self.classes[0].alphas)
         self.price_levels = np.full((self.n_product), 1, dtype=int)
+
+        print(self.userClassChanges)
 
 
     def addTimeListener(self, fireAt, fireFunction):
@@ -118,6 +139,11 @@ class Environment:
         It returns an array of InteractionNode objects
         """
         self.t += 1
+
+        for i in range(0, len(self.classes)):
+            if self.userClassChanges[i]["step"] == self.t:
+                self.classes[i].conversionRate = self.userClassChanges[i]["conversionRates"]
+
         # When t reaches a certain value then fire all listener that specified fireAt == self.t
         listener_indexes = np.where(self.listener_timing == self.t)
         listener_indexes = listener_indexes[0]
