@@ -1,3 +1,4 @@
+from re import S
 from Learner.UCB.UCB_Step4 import UCB_Step4
 from ContextGeneration.ContextualLearner import ContextualLearner
 from ContextGeneration.ContextTreeNode import ContextTreeNode
@@ -7,6 +8,9 @@ from Model.Evaluator.GraphEvaluator import GraphEvaluator
 import matplotlib.pyplot as plt
 import numpy as np
 from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
+from tqdm import tqdm
+from IPython.display import clear_output
+
 
 #files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
 #         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
@@ -47,22 +51,25 @@ for i in range(0, len(files)):
 n_experiments = 200
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
 
+used_learners = []
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
-    print("Running config: ", config_name)
+    # print("Running config: ", config_name)
     learner = ContextualLearner(margins=config_margins[i], clickProbability=click_probs[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
                                 features_names=features_names[i], approach='ucb')
+    used_learners.append(learner)
     multiEvaluator = MultiClassEvaluator(config_path=files[i])
     learner_graph_margins = []
     time_first_split = 0
-    for j in range(0, n_experiments):
+    for j in tqdm(range(0, n_experiments)):
         arms = learner.pull_arm()
-        if len(arms) > 1 and time_first_split == 0:
-            time_first_split = j
-            print("Time first split = {}".format(time_first_split))
         env[i].setPriceLevelsForContexts(arms)
         interaction = env[i].round()
+        if len(arms) > 1 and time_first_split == 0:
+            time_first_split = j
+            interactions_for_test = interaction
+            # print("Time first split = {}".format(time_first_split))
         learner.update(interaction)
         learner_graph_margins.append(multiEvaluator.computeMargin_per_class(arms))
 
@@ -87,7 +94,22 @@ for i in range(0, len(env)):
     axes[i, 1].set_xlabel("Time step")
     axes[i, 1].set_ylabel("Cumulative margins")
     axes[0, 1].set_title("Average reward")
-    print("Optimal arm found:\n\t", learner.pull_arm(), "\nOptimal theoretical arm:\n\t", optimal_arms[i])
+    # print("Optimal arm found:\n\t", learner.pull_arm(), "\nOptimal theoretical arm:\n\t", optimal_arms[i])
 
 plt.show()
 
+for i in range(0, len(files)):
+    print("\nReport for file {}:".format(files[i]))
+    leaves = used_learners[i].tree.get_leaves()
+
+    print("   - [ALPHAS] Estimated starting parameters are: ")
+    id_class = 0
+    for leaf in leaves:
+        print("      - [CLASS {}] Features {} estimated alpha {}".format(id_class, leaf.split_features, leaf.learner.alphas))
+        id_class += 1
+
+    print("   - [UNITS] Estimated mean number of units sold are: ")
+    id_class = 0
+    for leaf in leaves:
+        print("      - [CLASS {}] Features {} estimated #units {}".format(id_class, leaf.split_features, leaf.learner.units_mean))
+        id_class += 1
