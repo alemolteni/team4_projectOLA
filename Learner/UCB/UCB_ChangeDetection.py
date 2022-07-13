@@ -30,7 +30,8 @@ class UCB_ChangeDetection(UCB_Step3):
         # Choose the arm with the highest upper bound
         else:
             if np.random.binomial(1, 1 - self.alpha):
-                print("\nregular")
+                if self.debug:
+                    print("regular")
                 log_time = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
                 upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled,
                                                     out=np.full_like(log_time, 0, dtype=float),
@@ -52,7 +53,8 @@ class UCB_ChangeDetection(UCB_Step3):
                         sum += self.expected_reward[i][self.configuration[i]] * self.alphas[i]
                     print("Sum: ", sum)
             else:
-                print("\nrandom")
+                if self.debug:
+                    print("random")
                 self.configuration[0] = random.randint(0, 3)
                 self.configuration[1] = random.randint(0, 3)
                 self.configuration[2] = random.randint(0, 3)

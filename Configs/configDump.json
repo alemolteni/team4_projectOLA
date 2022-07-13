@@ -1,6 +1,7 @@
 {
     "Description": "Simple and single class",
     "optimalMargin": 27.45,
+    "optimalContextual": 0.0,
     "optimalConfig": [1, 0, 0, 2, 0],
     "margins": [
       [1, 2, 10, 16],
