@@ -5,10 +5,10 @@ import random
 class UCB_ChangeDetection(UCB_Step3):
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.zeros(5),
                  clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, conversion_rates=None, m=10, eps=0.05,
-                 h=1, alpha=0.05):
+                 h=1, alpha=0.05, units_mean=None):
         # Can't use conversion rates and can't use alphas
         super(UCB_ChangeDetection, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices,
-                                                  debug=debug,
+                                                  debug=debug, units_mean=units_mean,
                                                   clickProbability=clickProbability, secondary=secondary, Lambda=Lambda,
                                                   alphas=alphas, conversion_rates=conversion_rates)
         self.upper_deviation = np.zeros((self.num_products, self.num_prices))
@@ -18,6 +18,7 @@ class UCB_ChangeDetection(UCB_Step3):
         self.g_plus = np.zeros((self.num_products, self.num_prices))
         self.g_minus = np.zeros((self.num_products, self.num_prices))
         self.alpha = alpha
+        self.random_arm_times = []
 
     def pull_arm(self):
         # Choose arm with higher upper confidence bound
@@ -55,6 +56,7 @@ class UCB_ChangeDetection(UCB_Step3):
             else:
                 if self.debug:
                     print("random")
+                self.random_arm_times.append(self.t)
                 self.configuration[0] = random.randint(0, 3)
                 self.configuration[1] = random.randint(0, 3)
                 self.configuration[2] = random.randint(0, 3)
@@ -75,7 +77,7 @@ class UCB_ChangeDetection(UCB_Step3):
             bought = np.add(bought, inter.linearizeBought())
 
         if self.update_cumulative_sum(bought / visits):
-            print("\n\nCHANGE\n\n")
+            if self.debug: print("\n\nCHANGE\n\n")
             self.reset()
         else:
             for i in range(0, len(self.configuration)):

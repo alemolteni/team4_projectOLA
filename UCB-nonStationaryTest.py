@@ -30,13 +30,13 @@ def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debu
                                  secondary=secondary, Lambda=Lambda, debug=debug, units_mean=actual_units_mean,
                                  sliding_window_size=sliding_window_size)
     elif step_num == 7:
-        return UCB_ChangeDetection(margins=margins, secondary=secondary,
+        return UCB_ChangeDetection(margins=margins, secondary=secondary, units_mean=actual_units_mean,
                             clickProbability=click_prob, Lambda=Lambda, alphas=alpha)
     else:
         raise Exception("Invalid step number")
 
 
-files = ['./Configs/ns_config1.json', './Configs/ns_config5.json']
+files = ['./Configs/ns_config1.json', './Configs/ns_config2.json', './Configs/ns_config3.json', './Configs/ns_config5.json']
 env = []
 config_margins = []
 mc_evals = []
@@ -75,8 +75,8 @@ for i in range(0, len(files)):
     opt_values.append(opt_val)
 
 
-n_experiments = 200
-ucb_type = 6
+n_experiments = 300
+ucb_type = 7
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
 if ucb_type == 6:
     plt.suptitle("UCB sliding window")
@@ -128,6 +128,10 @@ for i in range(0, len(env)):
     x = np.linspace(0, n_experiments, n_experiments)
     axes[i, 0].plot(x, optimal)
     axes[i, 0].plot(x, learner_graph_margins)
+    if ucb_type == 7:
+        random_takes = np.full(len(optimal), np.nan)
+        random_takes[learner.random_arm_times] = 0
+        axes[i, 0].plot(x, random_takes)
     # axes[i, 0].plot(x, learner_env_margins)
     axes[i, 0].set_xlabel("Time step")
     axes[i, 0].set_ylabel("Margins\n{}".format(config_name))
