@@ -1,4 +1,6 @@
 from re import S
+
+from matplotlib import units
 from Learner.UCB.UCB_Step4 import UCB_Step4
 from ContextGeneration.ContextualLearner import ContextualLearner
 from ContextGeneration.ContextTreeNode import ContextTreeNode
@@ -15,6 +17,8 @@ from IPython.display import clear_output
 #files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
 #         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
 files = ['./Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+approach = 'ts'
+
 env = []
 config_margins = []
 optimal_arms = []
@@ -57,11 +61,12 @@ for i in range(0, len(env)):
     # print("Running config: ", config_name)
     learner = ContextualLearner(margins=config_margins[i], clickProbability=click_probs[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                features_names=features_names[i], approach='ucb')
+                                features_names=features_names[i], approach=approach)
     used_learners.append(learner)
     multiEvaluator = MultiClassEvaluator(config_path=files[i])
     learner_graph_margins = []
     time_first_split = 0
+    environment_margins = []
     for j in tqdm(range(0, n_experiments)):
         arms = learner.pull_arm()
         env[i].setPriceLevelsForContexts(arms)
@@ -73,7 +78,13 @@ for i in range(0, len(env)):
         learner.update(interaction)
         learner_graph_margins.append(multiEvaluator.computeMargin_per_class(arms))
 
+        round_margin = 0
+        for inter in interaction:
+            round_margin += inter.linearizeMargin(config_margins[i])
+        environment_margins.append(round_margin/len(interaction))
+
     print(learner.tree)
+    print("Time first split is ", time_first_split)
 
     non_contextual = np.full(time_first_split, clairvoyant_opt_rew[i])
     contextual = np.full(n_experiments - time_first_split, clairvoyant_opt_context[i])
@@ -82,6 +93,7 @@ for i in range(0, len(env)):
     x = np.linspace(0, n_experiments, n_experiments)
     axes[i, 0].plot(x, learner_graph_margins)
     axes[i, 0].plot(x, optimal_possible)
+    axes[i, 0].plot(x, environment_margins)
     # axes[i, 0].plot(x, learner_env_margins)
     axes[i, 0].set_xlabel("Time step")
     axes[i, 0].set_ylabel("Margins\n{}".format(config_name))
@@ -89,8 +101,10 @@ for i in range(0, len(env)):
 
     cum_rews_graph = np.cumsum(learner_graph_margins)
     avg_cum_rews_graph = np.divide(cum_rews_graph, np.arange(1, n_experiments + 1))
+    avg_cum_rews_env = np.divide(np.cumsum(environment_margins), np.arange(1, n_experiments + 1))
     axes[i, 1].plot(x, avg_cum_rews_graph)
     axes[i, 1].plot(x, optimal_possible)
+    axes[i, 1].plot(x, avg_cum_rews_env)
     axes[i, 1].set_xlabel("Time step")
     axes[i, 1].set_ylabel("Cumulative margins")
     axes[0, 1].set_title("Average reward")
@@ -105,11 +119,27 @@ for i in range(0, len(files)):
     print("   - [ALPHAS] Estimated starting parameters are: ")
     id_class = 0
     for leaf in leaves:
-        print("      - [CLASS {}] Features {} estimated alpha {}".format(id_class, leaf.split_features, leaf.learner.alphas))
+        print("      - [CLASS {}] Features {} estimated alpha {}".format(id_class, leaf.split_features, np.round(leaf.learner.alphas, decimals=3)))
         id_class += 1
 
     print("   - [UNITS] Estimated mean number of units sold are: ")
     id_class = 0
     for leaf in leaves:
-        print("      - [CLASS {}] Features {} estimated #units {}".format(id_class, leaf.split_features, leaf.learner.units_mean))
+        print("      - [CLASS {}] Features {} estimated #units {}".format(id_class, leaf.split_features, np.round(leaf.learner.units_mean, decimals=3)))
+        id_class += 1
+
+    np.set_printoptions(linewidth=np.inf)
+    print("   - [CONVERSION RATES] Estimated conversion rates are: ")
+    id_class = 0
+    for leaf in leaves:
+        if approach == 'ucb':
+            print("      - [CLASS {}] Features {} estimated CR \n{}".format(id_class, leaf.split_features, np.round(leaf.learner.conversion_rates, decimals=3)))
+        else:
+            conv_rates_exp = np.zeros((len(leaf.learner.units_mean), len(leaf.learner.margins[0])), dtype=float)
+            for i in range(0,len(leaf.learner.units_mean)):
+                for j in range(0,len(leaf.learner.margins[0])):
+                    bought = leaf.learner.conversion_rates_distro[i][j][0]
+                    not_bought = leaf.learner.conversion_rates_distro[i][j][1]
+                    conv_rates_exp[i][j] = bought / (bought + not_bought)
+            print("      - [CLASS {}] Features {} estimated CR \n{}".format(id_class, leaf.split_features, np.round(conv_rates_exp, decimals=3)))
         id_class += 1
