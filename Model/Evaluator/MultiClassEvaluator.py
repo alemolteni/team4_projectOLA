@@ -23,15 +23,21 @@ class MultiClassEvaluator:
         self.user_means = np.array(user_means)        
 
 
-    def computeMargin(self, arm):
+    def computeMargin(self, arm, time=None):
         marginsPerPrice = self.config["margins"]
         margins = [marginsPerPrice[i][arm[i]] for i in range(0,len(arm))]
 
         conf_classes = self.config["classes"]
         evaluators_results = []
         for uc in conf_classes:
-            armConvRates = [uc["conversionRates"][i][arm[i]] for i in range(0,len(arm))]
+            convRatesMat = uc["conversionRates"]
+            if time is not None and "change" in uc:
+                if time >= uc["change"]["step"]:
+                    # print("Change ConvRate current time {}, change step {}".format(time, uc["change"]["step"]))
+                    convRatesMat = uc["change"]["conversionRates"]
+            armConvRates = [convRatesMat[i][arm[i]] for i in range(0,len(arm))]
             product_list = [Product(int(key), uc["secondary"][key]) for key in uc["secondary"]]
+
             eval = GraphEvaluator(products_list=product_list, click_prob_matrix=uc["clickProbability"], lambda_prob=uc["lambda"], conversion_rates=armConvRates,
                         alphas=uc["alphas"], margins=margins, units_mean=uc["actualUnitsMean"], convert_units=False, verbose=False)
             evaluators_results.append(eval.computeMargin())
