@@ -18,15 +18,20 @@ class TS_Alphas(TS_CR):
         self.secondary_prod = secondary_prod
 
     # alphas parameters are treated as the mean of a beta distribution
+    
 
     def pull_arm(self):
         arm = super(TS_Alphas, self).pull_arm()
 
         log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
+        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
                                                out=np.full_like(log_time_double, 0, dtype=float),
                                                where=self.times_arms_pulled > 0))
-        self.lower_bound_cr = np.subtract(self.used_conv_rates, lower_deviation_cr)
+        def from_beta_to_cr(a):
+            return a[0] / (a[0] + a[1])
+        expected_cr = np.apply_along_axis(from_beta_to_cr, 2, self.conversion_rates_distro)
+                
+        self.lower_bound_cr = np.subtract(expected_cr, lower_deviation_cr)
         self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
 
         return arm

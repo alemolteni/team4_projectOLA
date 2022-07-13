@@ -29,7 +29,7 @@ class UCB_Step4(UCB_Step3):
             upper_deviation_cr = np.sqrt(np.divide(log_time_double, self.times_arms_pulled,
                                                 out=np.full_like(log_time_double, 0, dtype=float),
                                                 where=self.times_arms_pulled > 0))
-            lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
+            lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
                                                 out=np.full_like(log_time_double, 0, dtype=float),
                                                 where=self.times_arms_pulled > 0))
 
