@@ -12,6 +12,7 @@ import numpy as np
 from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
 from tqdm import tqdm
 from IPython.display import clear_output
+import json
 
 
 #files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
@@ -33,8 +34,18 @@ clairvoyant_opt_context = []
 actual_unit_mean = []
 features_names = []
 
+cp_class_per_env = []
+
 for i in range(0, len(files)):
     env.append(Environment(config_path=files[i]))
+
+    class_cp = []
+    for uc in env[i].classes:
+        feat = {uc.features_names[0]: uc.features_values[0],
+                uc.features_names[1]: uc.features_values[1]}
+        class_cp.append([uc.raw_click, feat, uc.n_user[0]])
+    cp_class_per_env.append(class_cp)
+
     features_names.append(env[i].classes[0].features_names)
     config = mergeUserClasses([files[i]], False)[0]
     config_margins.append(config["marginsPerPrice"])
@@ -50,7 +61,7 @@ for i in range(0, len(files)):
     clairvoyant_opt_context.append(config["optimalContextual"])
     units_means.append(config["units_mean"])
     actual_unit_mean.append(config["actual_units_mean"])
-
+#print(click_probs[0])
 
 n_experiments = 200
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
@@ -59,7 +70,7 @@ used_learners = []
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
     # print("Running config: ", config_name)
-    learner = ContextualLearner(margins=config_margins[i], clickProbability=click_probs[i],
+    learner = ContextualLearner(margins=config_margins[i], clickProbability=cp_class_per_env[i],
                                 secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
                                 features_names=features_names[i], approach=approach)
     used_learners.append(learner)

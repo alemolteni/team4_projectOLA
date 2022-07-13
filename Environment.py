@@ -31,7 +31,7 @@ class Environment:
                     weights = uc["features"][0]["probability"]
                     uc["features"][0]["probability"] = 1
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
-                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  clickProbability=uc["clickProbability"],
                                                   alphas=uc["alphas"],
                                                   Lambda=uc["lambda"], n_user_mean=uc["usersMean"]*weights,
                                                   n_user_variance=uc["usersVariance"], productList=productList,
@@ -40,7 +40,7 @@ class Environment:
 
                     uc["features"][0]["probability"] = 0
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
-                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  clickProbability=uc["clickProbability"],
                                                   alphas=uc["alphas"],
                                                   Lambda=uc["lambda"], n_user_mean=uc["usersMean"]*(1-weights),
                                                   n_user_variance=uc["usersVariance"], productList=productList,
@@ -51,7 +51,7 @@ class Environment:
                     weights = uc["features"][1]["probability"]
                     uc["features"][1]["probability"] = 1
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
-                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  clickProbability=uc["clickProbability"],
                                                   alphas=uc["alphas"],
                                                   Lambda=uc["lambda"], n_user_mean=uc["usersMean"] * weights,
                                                   n_user_variance=uc["usersVariance"], productList=productList,
@@ -60,7 +60,7 @@ class Environment:
 
                     uc["features"][1]["probability"] = 0
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
-                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  clickProbability=uc["clickProbability"],
                                                   alphas=uc["alphas"],
                                                   Lambda=uc["lambda"], n_user_mean=uc["usersMean"] * (1 - weights),
                                                   n_user_variance=uc["usersVariance"], productList=productList,
@@ -68,7 +68,7 @@ class Environment:
                                                   units_gamma_shape=uc["unitsShape"]))
                 else:
                     self.classes.append(UserClass(conversionRate=uc["conversionRates"],
-                                                  clickProbability=GraphProbabilities(uc["clickProbability"]),
+                                                  clickProbability=uc["clickProbability"],
                                                   alphas=uc["alphas"],
                                                   Lambda=uc["lambda"], n_user_mean=uc["usersMean"],
                                                   n_user_variance=uc["usersVariance"], productList=productList,

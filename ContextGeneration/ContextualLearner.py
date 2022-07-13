@@ -1,3 +1,5 @@
+import copy
+
 from Learner.UCB.UCB_Step4 import UCB_Step4
 from Learner.TS_Alphas import TS_Alphas
 from ContextGeneration.ContextTreeNode import ContextTreeNode
@@ -5,20 +7,24 @@ import numpy as np
 
 
 class ContextualLearner:
-    def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, approach="ucb",
-                 clickProbability=np.ones((5, 5)), secondary=None, Lambda=1, features_names=None, update_frequency=14):
+    def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, approach="ts",
+                 clickProbability=None, secondary=None, Lambda=1, features_names=None, update_frequency=14):
 
         self.margins = margins
         self.num_products = num_products
         self.num_prices = num_prices
         self.debug = debug
         self.approach = approach
-        self.clickProbability = clickProbability
         self.secondary = secondary
         self.Lambda = Lambda
+
+        # This is an array of [click_prob, features, n_user] for each user class
+        self.clickProbability = clickProbability
+
+        cp = self.weight_click_probs({})
         learner = self.choose_approach(self.approach, margins=self.margins, num_products=self.num_products,
                                        num_prices=self.num_prices, debug=self.debug,
-                                       clickProbability=self.clickProbability, secondary=self.secondary,
+                                       clickProbability=cp, secondary=self.secondary,
                                        Lambda=self.Lambda)
 
         self.features_names = features_names
@@ -26,6 +32,30 @@ class ContextualLearner:
         self.update_frequency = update_frequency
         self.t = 0
         self.samples = []
+
+    # Return a weighted average of the click probability for the specified context: [{feature: value}]
+    def weight_click_probs(self, context):
+        #print(context)
+        cp = np.zeros((self.num_products, self.num_products), dtype=np.float)
+        n = 0
+        if len(context) == 0:
+            for i in range(0, len(self.clickProbability)):
+                cp = np.add(cp, np.array(self.clickProbability[i][0]) * self.clickProbability[i][2])
+                n += self.clickProbability[i][2]
+            return np.divide(cp, n)
+        elif len(context) == 1:
+            for i in range(0, len(self.clickProbability)):
+                for f in context.keys():
+                    if context[f] == self.clickProbability[i][1][f]:
+                        cp = np.add(cp, np.array(self.clickProbability[i][0]) * self.clickProbability[i][2])
+                        n += self.clickProbability[i][2]
+            return np.divide(cp, n)
+        else:
+            for i in range(0, len(self.clickProbability)):
+                if context == self.clickProbability[i][1]:
+                    return self.clickProbability[i][0]
+        #return 0.0
+
 
     def choose_approach(self, typeLearner, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False,
                  clickProbability=np.ones((5, 5)), secondary=None, Lambda=1):
@@ -58,10 +88,6 @@ class ContextualLearner:
         return
 
     def select_compliant_samples(self, interactions, leaf):
-        check_condition = [None for _ in self.features_names]
-        for f in leaf.split_features:
-            check_condition[self.features_names.index(f)] = leaf.split_features[f]
-
         # Select only interaction compliant with the feature of the node
         samples = []
         for sample in interactions:
@@ -92,6 +118,7 @@ class ContextualLearner:
         return
 
     def evaluate_split(self, leaf):
+        #print(leaf.split_features)
         available_features = list(set(leaf.features_names) - set(leaf.split_features.keys()))
         for feature in available_features:
             if self.debug: print(feature)
@@ -113,24 +140,27 @@ class ContextualLearner:
             right_split_probabilities_lb = 0
             if len(samples) != 0 and len(left_split_samples) != 0:
                 left_split_probabilities = len(left_split_samples) / len(samples)
-                left_split_probabilities_lb = left_split_probabilities - np.sqrt(-np.log(0.05) / (2*len(left_split_samples)))
+                left_split_probabilities_lb = left_split_probabilities - np.sqrt(-np.log(0.95) / (2*len(left_split_samples)))
             if len(samples) != 0 and len(right_split_samples) != 0:
                 right_split_probabilities = len(right_split_samples) / len(samples)
-                right_split_probabilities_lb = right_split_probabilities - np.sqrt(-np.log(0.05) / (2*len(right_split_samples)))
+                right_split_probabilities_lb = right_split_probabilities - np.sqrt(-np.log(0.95) / (2*len(right_split_samples)))
 
             if len(samples) != 0 and len(left_split_samples) != 0 and len(right_split_samples) != 0:
                 assert left_split_probabilities + right_split_probabilities == 1
 
 
             #print("How many samples: ", len(left_split_samples), len(right_split_samples), len(samples))
+            new_leaf_split_r = new_leaf_split_l = copy.deepcopy(leaf.split_features)
+            new_leaf_split_l[feature] = 0
+            new_leaf_split_r[feature] = 1
 
             leftLearner = self.choose_approach(self.approach, margins=self.margins, num_products=self.num_products,
                                                num_prices=self.num_prices, debug=self.debug,
-                                               clickProbability=self.clickProbability, secondary=self.secondary,
+                                               clickProbability=self.weight_click_probs(new_leaf_split_l), secondary=self.secondary,
                                                Lambda=self.Lambda)
             rightLearner = self.choose_approach(self.approach, margins=self.margins, num_products=self.num_products,
                                                 num_prices=self.num_prices, debug=self.debug,
-                                                clickProbability=self.clickProbability, secondary=self.secondary,
+                                                clickProbability=self.weight_click_probs(new_leaf_split_r), secondary=self.secondary,
                                                 Lambda=self.Lambda)
 
             leftLearner.batch_update(left_split_samples)

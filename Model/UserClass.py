@@ -1,5 +1,6 @@
 import numpy as np
 from Model.InteractionNode import InteractionNode
+from Model.GraphProbabilities import GraphProbabilities
 import math
 
 class UserClass:
@@ -80,7 +81,8 @@ class UserClass:
 
         self.conversionRate = conversionRate
 
-        self.clickProbability = clickProbability
+        self.raw_click = clickProbability
+        self.clickProbability = GraphProbabilities(clickProbability)
         assert clickProbability is not None
 
         self.alphas = alphas
