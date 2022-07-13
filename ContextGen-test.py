@@ -15,10 +15,10 @@ from IPython.display import clear_output
 import json
 
 
-#files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
+#files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json',
 #         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
-files = ['./Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
-approach = 'ts'
+files = ['./Configs/config2.json', './Configs/configuration5.json', './Configs/configuration6.json']
+approach = 'ucb'
 
 env = []
 config_margins = []
@@ -63,9 +63,10 @@ for i in range(0, len(files)):
     actual_unit_mean.append(config["actual_units_mean"])
 #print(click_probs[0])
 
-n_experiments = 200
+n_experiments = 100
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
 
+plt.suptitle("Contextual using " + approach + " approach")
 used_learners = []
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
@@ -104,7 +105,7 @@ for i in range(0, len(env)):
     x = np.linspace(0, n_experiments, n_experiments)
     axes[i, 0].plot(x, learner_graph_margins)
     axes[i, 0].plot(x, optimal_possible)
-    axes[i, 0].plot(x, environment_margins)
+    # axes[i, 0].plot(x, environment_margins)
     # axes[i, 0].plot(x, learner_env_margins)
     axes[i, 0].set_xlabel("Time step")
     axes[i, 0].set_ylabel("Margins\n{}".format(config_name))

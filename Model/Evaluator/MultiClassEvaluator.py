@@ -57,17 +57,18 @@ class MultiClassEvaluator:
                 for uc in classes:
                     feature_names = []
                     feature_values = []
-                    for i in range(0, len(uc["features"])):
-                        if uc["features"][i]["probability"] == "None":
-                            uc["features"][i]["probability"] = None
-                        feature_values.append(uc["features"][i]["probability"])
-                        feature_names.append(uc["features"][i]["name"])
+                    for j in range(0, len(uc["features"])):
+                        feature_values.append(uc["features"][j]["probability"])
+                        feature_names.append(uc["features"][j]["name"])
                     compliant = True
+                    prob = 1
                     for f in split_feature:
                         for j in range(0, len(feature_names)):
                             if feature_names[j] == f:
                                 idx = j
-                        if feature_values[idx] != split_feature[f]:
+                        if feature_values[idx] != 0 and feature_values[idx] != 1:
+                            prob = (1-split_feature[f]) * feature_values[idx] + (split_feature[f]) * (1-feature_values[idx])
+                        elif feature_values[idx] != split_feature[f]:
                             compliant = False
                     if compliant:
                         arm = arms[i][0]
@@ -78,5 +79,5 @@ class MultiClassEvaluator:
                                               lambda_prob=uc["lambda"], conversion_rates=armConvRates,
                                               alphas=uc["alphas"], margins=margins, units_mean=uc["actualUnitsMean"],
                                               convert_units=False, verbose=False)
-                        result += eval.computeMargin()*uc["usersMean"]
+                        result += eval.computeMargin()*uc["usersMean"]*prob
             return result / self.user_means.sum()
