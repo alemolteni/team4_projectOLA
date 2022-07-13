@@ -33,7 +33,7 @@ def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debu
         raise Exception("Invalid step number")
 
 
-files = ['./Configs/config1nonStat.json', './Configs/configuration5nonStat.json', './Configs/configuration5.json']
+files = ['./Configs/ns_config1.json', './Configs/ns_config5.json']
 env = []
 config_margins = []
 optimal_arms = []
