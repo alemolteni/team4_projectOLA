@@ -123,3 +123,24 @@ def mergeUserClasses(PathList, debug):
         # finally mergedConfigurationList will contain a merged configuration for each config file.json present in configurationPathList 
         mergedConfigurationList.append(mergedConfiguration)
     return mergedConfigurationList
+
+def linearizeOptimalMarginNonStationary(config_path):
+    f = open(config_path)
+    config = json.load(f)
+    f.close()
+
+    opt_value = [config["optimalMargin"]]
+    opt_time_start = [0]
+
+    changes = []
+    for uc in config["classes"]:
+        if "change" in uc:
+            changes.append(uc["change"])
+    
+    changes = sorted(changes, key=lambda x: x['step'])
+
+    for ch in changes:
+        opt_value.append(ch["optimalMargin"])
+        opt_time_start.append(ch["step"])
+
+    return opt_time_start, opt_value
