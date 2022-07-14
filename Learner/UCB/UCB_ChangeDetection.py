@@ -18,21 +18,24 @@ class UCB_ChangeDetection(UCB_Step3):
         self.g_plus = np.zeros((self.num_products, self.num_prices))
         self.g_minus = np.zeros((self.num_products, self.num_prices))
         self.alpha = alpha
+        self.actual_t = 0
         self.random_arm_times = []
+        self.reset_times = []
 
     def pull_arm(self):
         # Choose arm with higher upper confidence bound
         # UCB is defined as arm ← argmax{a∈A} (x(a) + sqrt(2*log(t)/n(a,t − 1))
         # x(a) is the expected reward till now (which is the metric for the reward?)
         self.t += 1
+        self.actual_t += 1
         # Run every arm at least once
         if self.t <= 4:
             self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
-        # Choose the arm with the highest upper bound
         else:
             if np.random.binomial(1, 1 - self.alpha):
                 if self.debug:
                     print("regular")
+                # sqrt(2*log(t)/n(a,t − 1) for each product and price
                 log_time = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
                 upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled,
                                                     out=np.full_like(log_time, 0, dtype=float),
@@ -42,6 +45,7 @@ class UCB_ChangeDetection(UCB_Step3):
 
                 self.expected_reward = self.compute_expected_reward()
 
+                # Choose the arm with the highest reward using CR upper bound
                 self.configuration = np.argmax(self.expected_reward, axis=1)
                 if self.debug:
                     print("Config: ", self.configuration)
@@ -56,7 +60,7 @@ class UCB_ChangeDetection(UCB_Step3):
             else:
                 if self.debug:
                     print("random")
-                self.random_arm_times.append(self.t)
+                self.random_arm_times.append(self.actual_t)
                 self.configuration[0] = random.randint(0, 3)
                 self.configuration[1] = random.randint(0, 3)
                 self.configuration[2] = random.randint(0, 3)
@@ -77,7 +81,8 @@ class UCB_ChangeDetection(UCB_Step3):
             bought = np.add(bought, inter.linearizeBought())
 
         if self.update_cumulative_sum(bought / visits):
-            if self.debug: print("\n\nCHANGE\n\n")
+            # print("\n\nCHANGE AT TIME {}\n\n".format(self.actual_t))
+            self.reset_times.append(self.actual_t)
             self.reset()
         else:
             for i in range(0, len(self.configuration)):
