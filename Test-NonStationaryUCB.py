@@ -8,6 +8,7 @@ from Environment import Environment
 from Model.Evaluator.GraphEvaluator import GraphEvaluator
 from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
 import matplotlib.pyplot as plt
+import json
 import numpy as np
 from tqdm import tqdm
 from IPython.display import clear_output
@@ -75,8 +76,8 @@ for i in range(0, len(files)):
     opt_values.append(opt_val)
 
 
-n_experiments = 300
-ucb_type = 7
+n_experiments = 1
+ucb_type = 6
 fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
 if ucb_type == 6:
     plt.suptitle("UCB sliding window")
@@ -85,6 +86,7 @@ elif ucb_type == 7:
 else:
     plt.suptitle("UCB step {}".format(ucb_type))
 
+metrics = []
 for i in range(0, len(env)):
     config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
     print("\nRunning config: ", config_name)
@@ -148,4 +150,97 @@ for i in range(0, len(env)):
     axes[i, 1].set_ylabel("Cumulative margins")
     axes[0, 1].set_title("Average reward")
 
+    average_regret = np.clip(np.subtract(optimal, learner_graph_margins), 0, None).mean()
+    metrics.append({"averageRegret": average_regret})
+
+for i in range(0,len(files)):
+    print("\nConfiguration {} metrics: {}".format(files[i], metrics[i]))
+
 plt.show()
+
+
+# Significant number of runs computation
+from datetime import datetime
+dtime = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
+n_experiments = 500
+n_runs = 50
+print("\n\nStart testing all the configs for {} days for {} times".format(n_experiments, n_runs))
+datasets = []
+for i in range(0,len(files)):
+    config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
+    print("\nRunning config: ", config_name)
+    learner = choose_learner(ucb_type, margins=config_margins[i], alpha=alphas[i], click_prob=click_probs[i],
+                                secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
+                                actual_units_mean=actual_unit_mean[i], sliding_window_size=50)
+
+    # Compute optimal margin evolution during time
+    changes_steps = opt_time_starts[i]
+    changes_steps.append(n_experiments)
+    durations = np.ediff1d(changes_steps)
+    optimal = np.array([],dtype=float)
+    for k in range(0,len(durations)):
+        line = np.full(durations[k], opt_values[i][k])
+        optimal = np.hstack([optimal, line])
+
+    average_regrets = []
+    average_expected_rewards = []
+    average_env_rewards = []
+    for k in tqdm(range(0,n_runs)):
+        learner_graph_margins = np.array([])
+        learner_env_margins = np.array([])
+
+        # Run one simulation
+        env = Environment(config_path=files[i])
+        for j in range(0, n_experiments):
+            single_margin = 0
+            opt_single_margin = 0
+
+            pulledArm = learner.pull_arm()
+
+            ge_margin = mc_evals[i].computeMargin(pulledArm, time=j)
+            
+            env.setPriceLevels(pulledArm)
+            interactions = env.round()
+            env_margin = 0
+            for k in range(0, len(interactions)):
+                env_margin = env_margin + interactions[k].linearizeMargin(config_margins[i])
+            env_margin = env_margin / len(interactions)
+
+            learner.update(interactions)
+
+            learner_graph_margins = np.append(learner_graph_margins, ge_margin)
+            learner_env_margins = np.append(learner_env_margins, env_margin)
+
+        # Compute the metrics 
+        average_regret = np.clip(np.subtract(optimal, learner_graph_margins), 0, None).mean()
+        average_exp_rew = learner_graph_margins.mean()
+        average_env_rew = learner_env_margins.mean()
+
+        average_regrets.append(average_regret)
+        average_expected_rewards.append(average_exp_rew)
+        average_env_rewards.append(average_env_rew)
+
+    # Save the metrics into a dict
+    dict_metrics = {
+        "averageRegrets": average_regrets,
+        "averageExpectedRewards": average_expected_rewards,
+        "averageEnvRewards": average_env_rewards,
+        "averageOptimalReward": optimal.mean(),
+        "time": dtime
+    }
+
+    # Then save the dict into a file
+    if ucb_type == 6:
+        type_name = "SW"
+    elif ucb_type == 7:
+        type_name = "CD"
+    else:
+        type_name = "UNK"   # Unkown UCB type
+    file_name = "./Results/NS-UCB_{}_{}_{}.json".format(type_name, dtime, config_name)
+    with open(file_name, 'w', encoding='utf-8') as f:
+        json.dump(dict_metrics, f, ensure_ascii=False, indent=4)
+
+
+
+
