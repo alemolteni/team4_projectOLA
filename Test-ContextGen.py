@@ -17,7 +17,7 @@ import json
 np.seterr(all='raise')
 files = ['./Configs/config2.json', './Configs/config3.json',
          './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
-#files = ['./Configs/config2.json', './Configs/configuration5.json', './Configs/configuration6.json']
+#files = ['./Configs/configuration5.json', './Configs/configuration5.json']
 approach = 'ucb'
 
 env = []

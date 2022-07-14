@@ -32,15 +32,15 @@ class UCB_Step5(UCB_Step3):
             log_time_cr = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
 
             upper_deviation_click_first = np.sqrt(np.divide(log_time_click, self.trial_click_first,
-                                                      out=np.full_like(log_time_click, 0, dtype=float),
+                                                      out=np.full_like(log_time_click, self.big_number_for_ub, dtype=float),
                                                       where=self.trial_click_first != 0))
 
             upper_deviation_click_second = np.sqrt(np.divide(log_time_click, self.trial_click_second,
-                                                      out=np.full_like(log_time_click, 0, dtype=float),
+                                                      out=np.full_like(log_time_click, self.big_number_for_ub, dtype=float),
                                                       where=self.trial_click_second != 0))
 
             upper_deviation_cr = np.sqrt(np.divide(log_time_cr, self.times_arms_pulled,
-                                                out=np.full_like(log_time_cr, 0, dtype=float),
+                                                out=np.full_like(log_time_cr, self.big_number_for_ub, dtype=float),
                                                 where=self.times_arms_pulled > 0))
 
             for prod in range(0, self.num_products):

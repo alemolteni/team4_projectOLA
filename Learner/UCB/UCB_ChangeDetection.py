@@ -38,7 +38,7 @@ class UCB_ChangeDetection(UCB_Step3):
                 # sqrt(2*log(t)/n(a,t − 1) for each product and price
                 log_time = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
                 upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled,
-                                                    out=np.full_like(log_time, 0, dtype=float),
+                                                    out=np.full_like(log_time, self.big_number_for_ub, dtype=float),
                                                     where=self.times_arms_pulled > 0))
 
                 self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation)

@@ -35,7 +35,7 @@ class ContextualLearner:
 
     # Return a weighted average of the click probability for the specified context: {feature: value}
     def weight_click_probs(self, context):
-        #print(context)
+        # print(context)
         cp = np.zeros((self.num_products, self.num_products), dtype=np.float)
         n = 0
         if len(context) == 0:
@@ -50,11 +50,12 @@ class ContextualLearner:
                         cp = np.add(cp, np.array(self.clickProbability[i][0]) * self.clickProbability[i][2])
                         n += self.clickProbability[i][2]
             return np.divide(cp, n)
-        else:
+        elif len(context) == 2:
             for i in range(0, len(self.clickProbability)):
                 if context == self.clickProbability[i][1]:
                     return self.clickProbability[i][0]
-        #return 0.0
+
+        raise Exception("Context len impossible")
 
 
     def choose_approach(self, typeLearner, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False,
@@ -182,5 +183,6 @@ class ContextualLearner:
 
             if left_margin * left_split_probabilities_lb + right_margin * right_split_probabilities_lb > previous_margin:
                 leaf.split(feature, leftLearner, rightLearner)
+                # print(leaf.split_features)
                 return True
         return False

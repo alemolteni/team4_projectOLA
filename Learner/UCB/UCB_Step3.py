@@ -37,6 +37,8 @@ class UCB_Step3():
         self.units_mean = units_mean.copy()
         self.upper_bound_cr = np.zeros((self.num_products, self.num_prices))
 
+        self.big_number_for_ub = 100  # to use as an inf in the upper bound
+
     def pull_arm(self):
         # Choose arm with higher upper confidence bound
         # UCB is defined as arm ← argmax{a∈A} (x(a) + sqrt(2*log(t)/n(a,t − 1))
@@ -49,7 +51,7 @@ class UCB_Step3():
         else:
             log_time = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
             upper_deviation = np.sqrt(np.divide(log_time, self.times_arms_pulled,
-                                                out=np.full_like(log_time, 0, dtype=float),
+                                                out=np.full_like(log_time, self.big_number_for_ub, dtype=float),
                                                 where=self.times_arms_pulled > 0))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation)

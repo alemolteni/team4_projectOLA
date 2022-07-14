@@ -26,7 +26,7 @@ class UCB_Step4(UCB_Step3):
         else:
             log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
             upper_deviation_cr = np.sqrt(np.divide(log_time_double, self.times_arms_pulled,
-                                                out=np.full_like(log_time_double, np.inf, dtype=float),
+                                                out=np.full_like(log_time_double, self.big_number_for_ub, dtype=float),
                                                 where=self.times_arms_pulled > 0))
 
             self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
@@ -93,6 +93,12 @@ class UCB_Step4(UCB_Step3):
 
     # Initialize values using the given interactions
     def batch_update(self, interactions):
+        for inter in interactions:
+            self.configuration = inter.price_levels
+            assert len(self.configuration) is not None
+            self.update([inter])
+
+        return
 
         bought_per_price = np.full((self.num_products, self.num_prices), 0)
         started = np.full(self.num_products, 0)
