@@ -8,6 +8,7 @@ from Model.Evaluator.GraphEvaluator import GraphEvaluator
 from Model.Evaluator.MultiClassEvaluator import MultiClassEvaluator
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 
 def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debug, actual_units_mean,
@@ -78,7 +79,7 @@ for ucb in range(3, 7):
         learner_env_margins = np.array([])
         multiEval = MultiClassEvaluator(config_path=files[i])
 
-        for j in range(0, n_experiments):
+        for j in tqdm(range(0, n_experiments)):
             single_margin = 0
             opt_single_margin = 0
             armMargins = []
