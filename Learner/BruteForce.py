@@ -14,6 +14,7 @@ class BruteForce:
         self.product_index = 0
         self.num_products = num_products
         self.num_prices = num_prices
+        self.previous_max = 0
 
     def numberToBase(self, n, b):
         if n == 0:
@@ -37,6 +38,7 @@ class BruteForce:
 
     def update(self, overallMargin):
         if self.optimal_configuration_margin < overallMargin:
+            self.previous_max = self.optimal_configuration_margin 
             self.optimal_configuration = self.current_config.copy()
             self.optimal_configuration_margin = overallMargin
 
@@ -45,3 +47,6 @@ class BruteForce:
 
     def get_optima_margin(self):
         return self.optimal_configuration_margin
+
+    def get_delta_min(self):
+        return self.optimal_configuration_margin - self.previous_max
