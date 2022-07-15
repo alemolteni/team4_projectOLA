@@ -14,36 +14,6 @@ class UCB_Step4(UCB_Step3):
         super(UCB_Step4, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices, debug=debug,
                                         clickProbability=clickProbability, secondary=secondary, Lambda=Lambda)
 
-    def pull_arm(self):
-        # Choose arm with higher upper confidence bound
-        # UCB is defined as arm ← argmax{a∈A} (x(a) + sqrt(2*log(t)/n(a,t − 1))
-        # x(a) is the expected reward till now (which is the metric for the reward?)
-        self.t += 1
-        # Run every arm at least once
-        if self.t <= 4:
-            self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
-        # Choose the arm with the highest upper bound
-        else:
-            log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-            upper_deviation_cr = np.sqrt(np.divide(log_time_double, self.times_arms_pulled,
-                                                out=np.full_like(log_time_double, self.big_number_for_ub, dtype=float),
-                                                where=self.times_arms_pulled > 0))
-
-            self.upper_bound_cr = np.add(self.conversion_rates, upper_deviation_cr)
-            self.expected_reward = self.compute_expected_reward()
-            self.configuration = np.argmax(self.expected_reward, axis=1)
-
-        if self.debug:
-            print("Config: ", self.configuration)
-            print("Times arms pulled: ", self.times_arms_pulled)
-            #if self.t > 4: print("Upper_deviation: ", upper_deviation)
-            print("Expected rew: ", self.expected_reward)
-            sum = 0
-            for i in range(0, 4):
-                sum += self.expected_reward[i][self.configuration[i]] * self.alphas[i]
-            print("Sum: ", sum)
-        return self.configuration
-
     # Update alphas counting the number of user that started in each product and dividing it
     # by the total number of users
     # Also updates conversion rates
@@ -97,54 +67,7 @@ class UCB_Step4(UCB_Step3):
             self.configuration = inter.price_levels
             assert len(self.configuration) is not None
             self.update([inter])
-
         return
-
-        bought_per_price = np.full((self.num_products, self.num_prices), 0)
-        started = np.full(self.num_products, 0)
-        bought = np.zeros(self.num_products)
-        num_units = np.full(self.num_products, 0)
-
-        for inter in interactions:
-            started = np.add(started, inter.linearizeStart())
-            bought = np.add(bought, inter.linearizeBought())
-            num_units = np.add(num_units, inter.linearizeNumUnits())
-
-        for inter in interactions:
-            self.times_arms_pulled[inter.product][inter.price] += 1
-            bought_per_price[inter.product][inter.price] += inter.bought
-            # Expand
-            for next in inter.following:
-                interactions.append(next)
-
-        self.times_arms_pulled_for_alphas += sum(started)
-        self.times_arms_pulled_for_units = np.add(self.times_arms_pulled_for_units, bought)
-
-        self.conversion_rates = np.divide(bought_per_price, self.times_arms_pulled,
-                                          out=np.full_like(self.conversion_rates, 0, dtype=float),
-                                          where=self.times_arms_pulled > 0)
-        self.units_mean = np.divide(num_units, self.times_arms_pulled_for_units,
-                                    out=np.full_like(self.units_mean, 0, dtype=float),
-                                    where=self.times_arms_pulled_for_units > 0)
-        self.alphas = np.divide(started, self.times_arms_pulled_for_alphas,
-                                out=np.full_like(self.alphas, 0, dtype=float),
-                                where=self.times_arms_pulled_for_alphas > 0)
-        return
-
-    def compute_product_margin(self, test_config):
-        armMargins = []
-        armConvRates = []
-        for k in range(0, len(test_config)):
-            armMargins.append(self.margins[k][test_config[k]])
-            armConvRates.append(self.upper_bound_cr[k][test_config[k]])
-
-        # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
-        graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
-                                   lambda_prob=self.Lambda, alphas=self.alphas, conversion_rates=armConvRates,
-                                   margins=armMargins,
-                                   units_mean=self.units_mean, verbose=False, convert_units=False)
-        margin = graphEval.computeMargin()
-        return margin
 
     def compute_product_margin_lower_bound(self):
         log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)

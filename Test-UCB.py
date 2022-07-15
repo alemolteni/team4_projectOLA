@@ -35,9 +35,9 @@ def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debu
 # ========== PARAMETERS TO CHANGE =========
 files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
          './Configs/configuration4.json', './Configs/configuration5.json']
-MODE = "runs" # "plots" OR "runs"
+MODE = "plots" # "plots" OR "runs"
 n_experiments = 400
-ucb_type_step = 3 # From 3 to 5 
+ucb_type_step = 3  # From 3 to 5
 n_runs = 40 # Only in mode "runs"
 # =========================================
 
@@ -91,7 +91,7 @@ if MODE == "plots":
             learner_env_margins = np.array([])
             multiEval = MultiClassEvaluator(config_path=files[i])
 
-            for j in range(0, n_experiments):
+            for j in tqdm(range(0, n_experiments)):
                 single_margin = 0
                 opt_single_margin = 0
                 armMargins = []
