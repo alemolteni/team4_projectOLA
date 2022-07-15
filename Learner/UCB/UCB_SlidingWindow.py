@@ -6,7 +6,7 @@ class UCB_SlidingWindow(UCB_Step3):
 
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.zeros(5),
                  clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, sliding_window_size=20, units_mean=None):
-        # Can't use conversion rates and can't use alphas
+        # Can't use conversion rates
         self.sw_size = sliding_window_size
         self.circular_buffer_visits = np.zeros((sliding_window_size, num_products))
         self.circular_buffer_bought = np.zeros((sliding_window_size, num_products))

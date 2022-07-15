@@ -6,7 +6,7 @@ class UCB_ChangeDetection(UCB_Step3):
     def __init__(self, margins=np.ones((5, 4)), num_products=5, num_prices=4, debug=False, alphas=np.zeros(5),
                  clickProbability=np.zeros((5, 5)), secondary=None, Lambda=1, conversion_rates=None, m=10, eps=0.05,
                  h=1, alpha=0.05, units_mean=None):
-        # Can't use conversion rates and can't use alphas
+        # Can't use conversion rates
         super(UCB_ChangeDetection, self).__init__(margins=margins, num_products=num_products, num_prices=num_prices,
                                                   debug=debug, units_mean=units_mean,
                                                   clickProbability=clickProbability, secondary=secondary, Lambda=Lambda,
@@ -23,7 +23,7 @@ class UCB_ChangeDetection(UCB_Step3):
         self.reset_times = []
 
     def pull_arm(self):
-        # Choose arm with higher upper confidence bound
+        # Choose arm with higher upper confidence bound with probability 1-alpha or a random arm with probability alpha
         # UCB is defined as arm ← argmax{a∈A} (x(a) + sqrt(2*log(t)/n(a,t − 1))
         # x(a) is the expected reward till now (which is the metric for the reward?)
         self.t += 1
@@ -33,6 +33,7 @@ class UCB_ChangeDetection(UCB_Step3):
             self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
         else:
             if np.random.binomial(1, 1 - self.alpha):
+                # best arm
                 if self.debug:
                     print("regular")
                 # sqrt(2*log(t)/n(a,t − 1) for each product and price
@@ -58,6 +59,7 @@ class UCB_ChangeDetection(UCB_Step3):
                         sum += self.expected_reward[i][self.configuration[i]] * self.alphas[i]
                     print("Sum: ", sum)
             else:
+                # random arm
                 if self.debug:
                     print("random")
                 self.random_arm_times.append(self.actual_t)
@@ -71,7 +73,7 @@ class UCB_ChangeDetection(UCB_Step3):
 
     def update(self, interactions):
         # From daily interactions extract needed information, depending on step uncertainty:
-        #   - Step 3: update belief over conversion rates
+        #   - Step 6: update belief over conversion rates using a change detection algorithm
 
         visits = np.full(self.num_products, 0)
         bought = np.full(self.num_products, 0)
@@ -81,13 +83,13 @@ class UCB_ChangeDetection(UCB_Step3):
             bought = np.add(bought, inter.linearizeBought())
 
         if self.update_cumulative_sum(bought / visits):
-            # print("\n\nCHANGE AT TIME {}\n\n".format(self.actual_t))
             self.reset_times.append(self.actual_t)
             self.reset()
         else:
             for i in range(0, len(self.configuration)):
                 old = self.times_arms_pulled[i][self.configuration[i]]
-                self.times_arms_pulled[i][self.configuration[i]] += visits[i]  # Updates the number of times arm is pulled
+                # Updates the number of times arm is pulled
+                self.times_arms_pulled[i][self.configuration[i]] += visits[i]
                 mean = self.conversion_rates[i][self.configuration[i]]
                 self.conversion_rates[i][self.configuration[i]] = (mean * old + bought[i]) / \
                                                                   self.times_arms_pulled[i][self.configuration[i]]
@@ -121,4 +123,3 @@ class UCB_ChangeDetection(UCB_Step3):
         self.expected_reward = np.zeros((self.num_products, self.num_prices))
         self.upper_bound_cr = np.zeros((self.num_products, self.num_prices))
         self.t = 0
-
