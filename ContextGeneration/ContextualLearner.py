@@ -142,9 +142,13 @@ class ContextualLearner:
             if len(samples) != 0 and len(left_split_samples) != 0:
                 left_split_probabilities = len(left_split_samples) / len(samples)
                 left_split_probabilities_lb = left_split_probabilities - np.sqrt(-np.log(0.05) / (2*len(left_split_samples)))
+                if left_split_probabilities_lb < 0:
+                    left_split_probabilities_lb = 0
             if len(samples) != 0 and len(right_split_samples) != 0:
                 right_split_probabilities = len(right_split_samples) / len(samples)
                 right_split_probabilities_lb = right_split_probabilities - np.sqrt(-np.log(0.05) / (2*len(right_split_samples)))
+                if right_split_probabilities_lb < 0:
+                    right_split_probabilities_lb = 0
 
             # print(len(samples), len(left_split_samples), len(right_split_samples))
             if len(samples) != 0 and len(left_split_samples) != 0 and len(right_split_samples) != 0:
