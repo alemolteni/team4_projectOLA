@@ -70,6 +70,8 @@ class UCB_Step4(UCB_Step3):
         return
 
     def compute_product_margin_lower_bound(self):
+        self.pull_arm()
+        self.t -= 1
         log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
         lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
                                                out=np.full_like(log_time_double, 0, dtype=float),
@@ -100,5 +102,22 @@ class UCB_Step4(UCB_Step3):
                 margin = graphEval.computeMargin()
 
                 exp_rewards[i, j] = margin
+
+        test_config = np.argmax(exp_rewards, axis=1)
+        armMargins = []
+        armConvRates = []
+        # print(self.lower_bound_cr)
+        # print(self.times_arms_pulled)
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(self.lower_bound_cr[k][test_config[k]])
+
+        graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
+                                   lambda_prob=self.Lambda, alphas=self.alphas,
+                                   conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
+        #print(margin - np.max(exp_rewards))
         # return the best margin testing configuration using a heuristic
-        return np.max(exp_rewards)
+        return margin

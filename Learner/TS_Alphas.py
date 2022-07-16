@@ -87,5 +87,21 @@ class TS_Alphas(TS_CR):
                 margin = graphEval.computeMargin()
 
                 exp_rewards[i, j] = margin
+
+        test_config = np.argmax(exp_rewards, axis=1)
+        armMargins = []
+        armConvRates = []
+        # print(self.lower_bound_cr)
+        # print(self.times_arms_pulled)
+        for k in range(0, len(test_config)):
+            armMargins.append(self.margins[k][test_config[k]])
+            armConvRates.append(self.lower_bound_cr[k][test_config[k]])
+
+        graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
+                                   lambda_prob=self.Lambda, alphas=self.alphas,
+                                   conversion_rates=armConvRates,
+                                   margins=armMargins,
+                                   units_mean=self.units_mean, verbose=False, convert_units=False)
+        margin = graphEval.computeMargin()
         # return the best margin testing configuration using a heuristic
-        return np.max(exp_rewards)
+        return margin
