@@ -24,7 +24,7 @@ class TS_Alphas(TS_CR):
         arm = super(TS_Alphas, self).pull_arm()
 
         log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
+        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
                                                out=np.full_like(log_time_double, 0, dtype=float),
                                                where=self.times_arms_pulled > 0))
         def from_beta_to_cr(a):

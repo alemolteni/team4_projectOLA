@@ -71,7 +71,7 @@ class UCB_Step4(UCB_Step3):
 
     def compute_product_margin_lower_bound(self):
         log_time_double = np.full((self.num_products, self.num_prices), 2 * math.log(self.t), dtype=float)
-        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.95), self.times_arms_pulled,
+        lower_deviation_cr = np.sqrt(np.divide(-np.log(0.05), self.times_arms_pulled,
                                                out=np.full_like(log_time_double, 0, dtype=float),
                                                where=self.times_arms_pulled > 0))
         self.lower_bound_cr = np.subtract(self.conversion_rates, lower_deviation_cr)
