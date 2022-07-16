@@ -228,7 +228,7 @@ class UserClass:
                                               firstSlot=firstSlot, secondSlot=secondSlot, sec1Opened=sec1Opened,
                                               sec2Opened=sec2Opened, sec1CanBeOpened=sec1CanBeOpened, 
                                               sec2CanBeOpened=sec2CanBeOpened, bought=bought, units=units, following=following,
-                                              num_products=len(self.alphas))
+                                              num_products=len(self.alphas), price_levels=self.currentPrice)
             interactionNode.setFeatures(self.features_names, self.features_values)
             visitingOrder.append(interactionNode)
 

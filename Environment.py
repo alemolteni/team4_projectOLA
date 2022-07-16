@@ -156,6 +156,5 @@ class Environment:
             userClass.generateNewAlphas()
             for i in range(0,dailyUsers):
                 ep = userClass.generateEpisode()
-                ep.price_levels = self.price_levels
                 episodes.append(ep)
         return  episodes

@@ -78,7 +78,7 @@
         "unitsShape": [0.94, 1.45, 1.2, 2.0, 1.5],
         "actualUnitsMean": [1.52, 1.97, 1.74, 2.49, 2.01],
         "unitsScale": 1,
-        "usersMean": 25,
+        "usersMean": 100,
         "usersVariance": 1,
         "features": [{"name":"Adult","probability":0.5},{"name":"Male","probability":0}]
       }]
