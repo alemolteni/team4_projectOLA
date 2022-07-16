@@ -27,8 +27,6 @@ class TS:
         # XXX must be the expected reward and must be computed for each product and price level
         self.expected_reward = self.compute_expected_rewards()
         self.configuration = np.argmax(self.expected_reward, axis=1)
-        for i in range(0, self.num_products):
-            self.times_arms_pulled[i][self.configuration[i]] += 1
         # print(self.expected_reward)
         return self.configuration
 
@@ -44,6 +42,8 @@ class TS:
             visits = np.add(visits, inter.linearizeVisits())
             bought = np.add(bought, inter.linearizeBought())
         # Update distribution of the conv rates
+        for i in range(0, self.num_products):
+            self.times_arms_pulled[i][self.configuration[i]] += visits[i]
         for i in range(0,len(bought)):
             self.conversion_rates_distro[i][self.configuration[i]][0] += bought[i]
             self.conversion_rates_distro[i][self.configuration[i]][1] += (visits[i] - bought[i])
