@@ -97,8 +97,8 @@ class TS_Alphas(TS_CR):
             armMargins.append(self.margins[k][test_config[k]])
             armConvRates.append(self.lower_bound_cr[k][test_config[k]])
 
-        graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
-                                   lambda_prob=self.Lambda, alphas=self.alphas,
+        graphEval = GraphEvaluator(products_list=self.secondary_prod, click_prob_matrix=self.click_prob,
+                                   lambda_prob=self.l, alphas=self.alphas,
                                    conversion_rates=armConvRates,
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False, convert_units=False)
