@@ -19,6 +19,10 @@ class TS:
     def pull_arm(self):
         # Choose arm with higher reward w.r.t. generated conversion rates
         self.t += 1
+        if self.t <= 4:
+            self.configuration = [self.t - 1, self.t - 1, self.t - 1, self.t - 1, self.t - 1]
+            return self.configuration
+            
         for i in range(0, self.num_products):
             for j in range(0, self.num_prices):
                 params = self.conversion_rates_distro[i][j]

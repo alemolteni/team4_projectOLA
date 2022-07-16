@@ -175,6 +175,7 @@ class ContextualLearner:
             rightLearner.batch_update(right_split_samples)
             rightLearner.t = self.t
 
+            # print("Trying to split features {}, left feature is 0, right is 1 (pl={}, pr={})".format(leaf.split_features,left_split_probabilities_lb,right_split_probabilities_lb))
             left_margin = leftLearner.compute_product_margin_lower_bound()
             right_margin = rightLearner.compute_product_margin_lower_bound()
             # print("Left margin: ", left_margin, "\n", leftLearner.lower_bound_cr)

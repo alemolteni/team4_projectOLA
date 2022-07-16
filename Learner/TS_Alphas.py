@@ -29,9 +29,9 @@ class TS_Alphas(TS_CR):
                                                where=self.times_arms_pulled > 0))
         def from_beta_to_cr(a):
             return a[0] / (a[0] + a[1])
-        expected_cr = np.apply_along_axis(from_beta_to_cr, 2, self.conversion_rates_distro)
+        self.expected_cr = np.apply_along_axis(from_beta_to_cr, 2, self.conversion_rates_distro)
                 
-        self.lower_bound_cr = np.subtract(expected_cr, lower_deviation_cr)
+        self.lower_bound_cr = np.subtract(self.used_conv_rates, lower_deviation_cr)
         self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
 
         return arm
@@ -56,39 +56,52 @@ class TS_Alphas(TS_CR):
         return
 
     def batch_update(self, interactions):
+        #arms_pulled = {}
         for inter in interactions:
             self.configuration = inter.price_levels
+            #code = ''.join(np.array(inter.price_levels, dtype=str).tolist())
+            #if code not in arms_pulled:
+            #    arms_pulled[code] = 1
+            #else:
+            #    arms_pulled[code] += 1
+            # print("Interactions arm {}".format(inter.price_levels))
             assert len(self.configuration) is not None
             self.update([inter])
+        #print("Arms pulled list dict {}".format(arms_pulled))
 
     def compute_product_margin_lower_bound(self):
         self.pull_arm()  # Update the optimal configuration
         self.t -= 1  # Don't count the pull of the arm as a step
-        exp_rewards = np.zeros((self.num_products, self.num_prices))
-        for i in range(0, self.num_products):
-            for j in range(0, self.num_prices):
-                test_config = self.configuration
-                test_config[i] = j
 
-                armMargins = []
-                armConvRates = []
-                # print(self.lower_bound_cr)
-                # print(self.times_arms_pulled)
-                for k in range(0, len(test_config)):
-                    armMargins.append(self.margins[k][test_config[k]])
-                    armConvRates.append(self.lower_bound_cr[k][test_config[k]])
+        curr_config = self.configuration
+        for k in range(0,2):
+            exp_rewards = np.zeros((self.num_products, self.num_prices))
+            for i in range(0, self.num_products):
+                for j in range(0, self.num_prices):
+                    test_config = curr_config
+                    test_config[i] = j
 
-                # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
-                graphEval = GraphEvaluator(products_list=self.secondary_prod, click_prob_matrix=self.click_prob,
-                                           lambda_prob=self.l, alphas=self.alphas,
-                                           conversion_rates=armConvRates,
-                                           margins=armMargins,
-                                           units_mean=self.units_mean, verbose=False, convert_units=False)
-                margin = graphEval.computeMargin()
+                    armMargins = []
+                    armConvRates = []
+                    # print(self.lower_bound_cr)
+                    # print(self.times_arms_pulled)
+                    for k in range(0, len(test_config)):
+                        armMargins.append(self.margins[k][test_config[k]])
+                        armConvRates.append(self.lower_bound_cr[k][test_config[k]])
 
-                exp_rewards[i, j] = margin
+                    # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
+                    graphEval = GraphEvaluator(products_list=self.secondary_prod, click_prob_matrix=self.click_prob,
+                                            lambda_prob=self.l, alphas=self.alphas,
+                                            conversion_rates=armConvRates,
+                                            margins=armMargins,
+                                            units_mean=self.units_mean, verbose=False, convert_units=False)
+                    margin = graphEval.computeMargin()
 
-        test_config = np.argmax(exp_rewards, axis=1)
+                    exp_rewards[i, j] = margin
+
+            curr_config = np.argmax(exp_rewards, axis=1)
+        
+        test_config = curr_config
         armMargins = []
         armConvRates = []
         # print(self.lower_bound_cr)
@@ -103,5 +116,9 @@ class TS_Alphas(TS_CR):
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False, convert_units=False)
         margin = graphEval.computeMargin()
+
+        # print("Configuration to test for the upper bound is {} with margin {}".format(test_config, margin))
+        #print("Used lower bound conversion rates {}".format(self.lower_bound_cr))
+
         # return the best margin testing configuration using a heuristic
         return margin

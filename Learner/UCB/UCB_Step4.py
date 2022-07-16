@@ -79,31 +79,36 @@ class UCB_Step4(UCB_Step3):
         self.lower_bound_cr = np.subtract(self.conversion_rates, lower_deviation_cr)
         self.lower_bound_cr = np.clip(self.lower_bound_cr, 0, None)
 
-        exp_rewards = np.zeros((self.num_products, self.num_prices))
-        for i in range(0, self.num_products):
-            for j in range(0, self.num_prices):
-                test_config = self.configuration
-                test_config[i] = j
+        curr_config = self.configuration
 
-                armMargins = []
-                armConvRates = []
-                # print(self.lower_bound_cr)
-                # print(self.times_arms_pulled)
-                for k in range(0, len(test_config)):
-                    armMargins.append(self.margins[k][test_config[k]])
-                    armConvRates.append(self.lower_bound_cr[k][test_config[k]])
+        for k in range(0,3):
+            exp_rewards = np.zeros((self.num_products, self.num_prices))
+            for i in range(0, self.num_products):
+                for j in range(0, self.num_prices):
+                    test_config = curr_config
+                    test_config[i] = j
 
-                # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
-                graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
-                                           lambda_prob=self.Lambda, alphas=self.alphas,
-                                           conversion_rates=armConvRates,
-                                           margins=armMargins,
-                                           units_mean=self.units_mean, verbose=False, convert_units=False)
-                margin = graphEval.computeMargin()
+                    armMargins = []
+                    armConvRates = []
+                    # print(self.lower_bound_cr)
+                    # print(self.times_arms_pulled)
+                    for k in range(0, len(test_config)):
+                        armMargins.append(self.margins[k][test_config[k]])
+                        armConvRates.append(self.lower_bound_cr[k][test_config[k]])
 
-                exp_rewards[i, j] = margin
+                    # Units mean doesn't need an upper bound since it doesn't depend on the price of the product
+                    graphEval = GraphEvaluator(products_list=self.productList, click_prob_matrix=self.clickProbability,
+                                            lambda_prob=self.Lambda, alphas=self.alphas,
+                                            conversion_rates=armConvRates,
+                                            margins=armMargins,
+                                            units_mean=self.units_mean, verbose=False, convert_units=False)
+                    margin = graphEval.computeMargin()
 
-        test_config = np.argmax(exp_rewards, axis=1)
+                    exp_rewards[i, j] = margin
+
+            curr_config = np.argmax(exp_rewards, axis=1)
+        
+        test_config = curr_config
         armMargins = []
         armConvRates = []
         # print(self.lower_bound_cr)
@@ -118,6 +123,8 @@ class UCB_Step4(UCB_Step3):
                                    margins=armMargins,
                                    units_mean=self.units_mean, verbose=False, convert_units=False)
         margin = graphEval.computeMargin()
+
+        #print("Configuration to test for the upper bound is {} with margin {}".format(test_config, margin))
         #print(margin - np.max(exp_rewards))
         # return the best margin testing configuration using a heuristic
         return margin
