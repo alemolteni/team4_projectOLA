@@ -33,11 +33,13 @@ def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debu
         raise Exception("Invalid step number")
 
 # ========== PARAMETERS TO CHANGE =========
-files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
-         './Configs/configuration4.json', './Configs/configuration5.json']
+# files = ['./Configs/config1.json', './Configs/config2.json', './Configs/config3.json', './Configs/configDump.json',
+#          './Configs/configuration4.json', './Configs/configuration5.json']
+files = ['./Configs/config2.json','./Configs/config3.json','./Configs/ctx_config1.json']
+
 MODE = "plots" # "plots" OR "runs"
 n_experiments = 400
-ucb_type_step = 3  # From 3 to 5
+ucb_type_step = 5  # From 3 to 5
 n_runs = 40 # Only in mode "runs"
 # =========================================
 
@@ -73,7 +75,6 @@ for i in range(0, len(files)):
 
 if MODE == "plots":
     for ucb in range(3, 7):
-        n_experiments = 200
         fig, axes = plt.subplots(ncols=2, nrows=len(env), sharex="all", figsize=(16, 12))
         if ucb == 6:
             plt.suptitle("UCB sliding window")
@@ -169,9 +170,6 @@ else:
     for i in range(0,len(files)):
         config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
         print("\nRunning config: ", config_name)
-        learner = choose_learner(ucb_type_step, margins=config_margins[i], alpha=alphas[i], click_prob=click_probs[i],
-                                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                    actual_units_mean=actual_unit_mean[i], sliding_window_size=50)
 
         # Compute optimal margin evolution during time
         optimal = np.full(n_experiments, optimal_margins[i])
@@ -180,6 +178,10 @@ else:
         average_expected_rewards = []
         average_env_rewards = []
         for k in tqdm(range(0,n_runs)):
+            learner = choose_learner(ucb_type_step, margins=config_margins[i], alpha=alphas[i], click_prob=click_probs[i],
+                            secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
+                            actual_units_mean=actual_unit_mean[i], sliding_window_size=50)
+
             learner_graph_margins = np.array([])
             learner_env_margins = np.array([])
 

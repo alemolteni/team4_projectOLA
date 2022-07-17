@@ -13,14 +13,14 @@ from tqdm import tqdm
 from IPython.display import clear_output
 
 # ======== TUNABLE PARAMETERS ===========
-files = ['./Configs/config1.json', './Configs/config2.json','./Configs/config3.json', './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+files = ['./Configs/config2.json','./Configs/config3.json','./Configs/ctx_config1.json']
 n_experiments = 400
 # Step 3 = "TS_CR" ==> Uncertain Conversion Rates
 # Step 4 = "TS_Alphas" ==> Uncertain CRates, Alphas, #Units
 # Step 5 = "TS_GW" ==> Uncertain CRates, Graph Weights
 learner_name = "TS_CR"
 n_runs = 40
-MODE = "runs" # "plots" OR "runs"
+MODE = "plots" # "plots" OR "runs"
 # =======================================
 
 def get_learner(name="TS_CR", margins=None, alphas=None, secondary_prod=None, click_prob=None, units_mean=None, l=None):
@@ -159,8 +159,6 @@ else:
     for i in range(0,len(files)):
         config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
         print("\nRunning config: ", config_name)
-        learner = get_learner(name=learner_name, margins=config_margins[i], alphas=alphas[i], secondary_prod=prod_lists[i],
-                                    click_prob=click_probs[i], units_mean=actual_units_means[i], l=l)
 
         # Compute optimal margin evolution during time
         optimal = np.full((n_experiments), clairvoyant_opt_rew[i])
@@ -169,6 +167,9 @@ else:
         average_expected_rewards = []
         average_env_rewards = []
         for k in tqdm(range(0,n_runs)):
+            learner = get_learner(name=learner_name, margins=config_margins[i], alphas=alphas[i], secondary_prod=prod_lists[i],
+                            click_prob=click_probs[i], units_mean=actual_units_means[i], l=l)
+
             learner_graph_margins = np.array([])
             learner_env_margins = np.array([])
 

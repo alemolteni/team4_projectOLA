@@ -39,10 +39,10 @@ def choose_learner(step_num, margins, alpha, click_prob, secondary, Lambda, debu
 # ======= PARAMETERS TO CHANGE ========
 files = ['./Configs/ns_config1.json', './Configs/ns_config2.json', './Configs/ns_config3.json', './Configs/ns_config5.json']
 # files = ['./Configs/ns_config2.json','./Configs/ns_config5.json']
-n_experiments = 1
-ucb_type = 7
-swin_size = 120
-MODE = "runs" # "plots" OR "runs"
+n_experiments = 400
+ucb_type = 6
+swin_size = 50
+MODE = "plots" # "plots" OR "runs"
 # =====================================
 
 env = []
@@ -193,9 +193,6 @@ else:
     for i in range(0,len(files)):
         config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
         print("\nRunning config: ", config_name)
-        learner = choose_learner(ucb_type, margins=config_margins[i], alpha=alphas[i], click_prob=click_probs[i],
-                                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                    actual_units_mean=actual_unit_mean[i], sliding_window_size=50)
 
         # Compute optimal margin evolution during time
         changes_steps = opt_time_starts[i]
@@ -210,6 +207,10 @@ else:
         average_expected_rewards = []
         average_env_rewards = []
         for k in tqdm(range(0,n_runs)):
+            learner = choose_learner(ucb_type, margins=config_margins[i], alpha=alphas[i], click_prob=click_probs[i],
+                            secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
+                            actual_units_mean=actual_unit_mean[i], sliding_window_size=50)
+
             learner_graph_margins = np.array([])
             learner_env_margins = np.array([])
 

@@ -16,13 +16,13 @@ import json
 
 np.seterr(all='raise')
 # ======== PARAMETERS TO CHANGE ===========
-files = ['./Configs/config2.json', './Configs/config3.json',
-         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
-#files = ['./Configs/configuration5.json', './Configs/configuration5.json']
-approach = 'ucb' # "ucb" OR "ts"
-MODE = "runs" # "plots" OR "runs"
+#files = ['./Configs/config2.json', './Configs/config3.json',
+#         './Configs/configuration4.json', './Configs/configuration5.json', './Configs/configuration6.json']
+files = ['./Configs/ctx_config2.json', './Configs/ctx_config2.json','./Configs/ctx_config2.json','./Configs/ctx_config2.json']
+approach = 'ts' # "ucb" OR "ts"
+MODE = "plots" # "plots" OR "runs"
 n_experiments = 400
-n_runs = 40
+n_runs = 10
 # =========================================
 
 env = []
@@ -173,17 +173,18 @@ else:
     for i in range(0,len(files)):
         config_name = files[i][files[i].rfind('/') - len(files[i]) + 1:]
         print("\nRunning config: ", config_name)
-        learner = ContextualLearner(margins=config_margins[i], clickProbability=cp_class_per_env[i],
-                                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
-                                    features_names=features_names[i], approach=approach)
 
         # Compute optimal margin evolution during time
-        optimal = np.full((n_experiments), clairvoyant_opt_rew[i])
+        optimal = np.full((n_experiments), clairvoyant_opt_context[i])
 
         average_regrets = []
         average_expected_rewards = []
         average_env_rewards = []
         for k in tqdm(range(0,n_runs)):
+            learner = ContextualLearner(margins=config_margins[i], clickProbability=cp_class_per_env[i],
+                                    secondary=prod_lists[i], Lambda=lambdas[i], debug=False,
+                                    features_names=features_names[i], approach=approach)
+                                    
             learner_graph_margins = np.array([])
             learner_env_margins = np.array([])
 
