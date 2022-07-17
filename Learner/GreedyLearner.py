@@ -4,18 +4,17 @@ import numpy as np
 class GreedyLearner:
 
     def __init__(self, debug=False):
-        self.configuration_margin = [0, 0, 0, 0,
-                                     0]  # margini da valutare, ognuno per una delle 5 configurazioni di prezzo
-        self.t = -1  # per provare la configurazione tutti 0
-        self.optimal_configuration = [0, 0, 0, 0, 0]  # configurazione di prezzo ottimale
-        self.optimal_configuration_margin = 0  # margine ottimale della config sopra
+        self.configuration_margin = [0, 0, 0, 0, 0]
+        self.t = -1  # -1 means that the learner is not initialized
+        self.optimal_configuration = [0, 0, 0, 0, 0]
+        self.optimal_configuration_margin = 0
         self.isOptima = False
         self.numberOfComparison = 5
         self.debug = debug
 
     def pull_arm(self):
         if self.t == -1 or self.isOptima:
-            return self.optimal_configuration
+            return self.optimal_configuration  # initial configuration, then updated to be optimal
 
         try_configuration = self.optimal_configuration.copy()
 
@@ -25,10 +24,10 @@ class GreedyLearner:
 
         return try_configuration
 
-    def update(self, overallMargin):
-        # print(overallMargin)
+    def update(self, margin):
+        # Initialization
         if self.t == -1:
-            self.optimal_configuration_margin = overallMargin
+            self.optimal_configuration_margin = margin
             self.t += 1
             return
 
@@ -36,7 +35,7 @@ class GreedyLearner:
         # This is done to not compare again the optimal configuration with the other derivation, since if the arm is at
         # 3 it was not increased in the pull arm phase.
         if self.optimal_configuration[self.t] != 3:
-            self.configuration_margin[self.t] = overallMargin
+            self.configuration_margin[self.t] = margin
         else:
             self.configuration_margin[self.t] = 0
 
